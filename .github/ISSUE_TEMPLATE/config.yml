@@ -1,5 +1,8 @@
 blank_issues_enabled: false
 contact_links:
-  - name: Question / Help
+  - name: 🔒 Report a Security Vulnerability
+    url: https://github.com/Gururagavendra/gmail-cleaner/security/advisories/new
+    about: Please report security vulnerabilities privately
+  - name: ❓ Question / Help
     url: https://github.com/Gururagavendra/gmail-cleaner/discussions
     about: Ask questions or get help in Discussions

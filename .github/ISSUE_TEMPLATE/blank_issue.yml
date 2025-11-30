@@ -1,0 +1,26 @@
+---
+name: Blank Issue
+description: Create a new issue from scratch
+title: ""
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to open an issue!
+        
+        Please provide as much detail as possible.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: >-
+        Please describe your issue, question, or suggestion in detail.
+        For bug reports, consider including:
+        - What happened?
+        - What did you expect to happen?
+        - Steps to reproduce (if applicable)
+        - Any relevant screenshots or error messages
+    validations:
+      required: true
