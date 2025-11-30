@@ -145,6 +145,30 @@ docker logs $(docker ps -q --filter name=gmail-cleaner)
 ```
 Look for a URL starting with `https://accounts.google.com/o/oauth2/...`
 
+### Docker: OAuth CSRF Error / State Mismatch
+
+If you see `OAuth error: (mismatching_state) CSRF Warning`:
+
+1. **Stop and clean up:**
+   ```bash
+   docker compose down
+   ```
+
+2. **Clear browser cookies** for `accounts.google.com` (or use incognito/private window)
+
+3. **Start fresh:**
+   ```bash
+   docker compose up
+   ```
+
+4. Copy the OAuth URL from logs and paste in browser
+
+**Windows Docker users:** If OAuth keeps failing, try running without Docker:
+```bash
+pip install uv && uv sync
+uv run python main.py
+```
+
 ### "Google hasn't verified this app" warning
 
 This is normal for personal OAuth apps! Click:
