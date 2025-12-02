@@ -43,43 +43,20 @@ docker compose up --build
 ## Code Style
 
 - **Python**: Follow PEP 8, use type hints where possible
-- **JavaScript**: Use the existing modular pattern (`GmailCleaner.ModuleName`)
-- **CSS**: Keep styles in appropriate files under `static/css/`
 
 ## Making Changes
 
-### For Bug Fixes
-1. Create an issue first (if one doesn't exist)
-2. Reference the issue in your PR
-3. Add tests if applicable
-
 ### For New Features
-1. Open a feature request issue to discuss the idea
-2. Wait for approval before starting work
-3. Keep PRs focused and small
+1. Open a feature request issue to discuss the idea or feel free to open an pr
+2. Keep PRs focused and small
 
 ## Pull Request Process
 
 1. Update documentation if needed
-2. Test your changes locally
-3. Test Docker build if you modified Dockerfile or dependencies
-4. Fill out the PR template completely
-5. A maintainer will be automatically requested for review via CODEOWNERS on all pull requests
+2. Please Test your changes locally
+3. Please Test Docker build if you modified Dockerfile or dependencies
+4. A maintainer will be automatically requested for review via CODEOWNERS on all pull requests
 
-## Branch Naming
-
-- `feature/` - New features
-- `fix/` - Bug fixes
-- `docs/` - Documentation changes
-- `refactor/` - Code refactoring
-
-## Commit Messages
-
-Use clear, descriptive commit messages:
-- `feat: add email size filter`
-- `fix: resolve Docker build issue with README`
-- `docs: update setup instructions`
-- `refactor: split scanner module`
 
 ## Questions?
 
