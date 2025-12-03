@@ -120,6 +120,75 @@ class AppState:
             "fetched_count": 0,
             "csv_data": None
         }
+        
+        # Label operation state
+        self.label_operation_status: dict = {
+            "progress": 0,
+            "message": "Ready",
+            "done": False,
+            "error": None,
+            "affected_count": 0,
+            "total_senders": 0,
+            "current_sender": 0
+        }
+        
+        # Archive state
+        self.archive_status: dict = {
+            "progress": 0,
+            "message": "Ready",
+            "done": False,
+            "error": None,
+            "archived_count": 0,
+            "total_senders": 0,
+            "current_sender": 0
+        }
+        
+        # Mark important state
+        self.important_status: dict = {
+            "progress": 0,
+            "message": "Ready",
+            "done": False,
+            "error": None,
+            "affected_count": 0,
+            "total_senders": 0,
+            "current_sender": 0
+        }
+    
+    def reset_label_operation(self):
+        """Reset label operation state."""
+        self.label_operation_status = {
+            "progress": 0,
+            "message": "Ready",
+            "done": False,
+            "error": None,
+            "affected_count": 0,
+            "total_senders": 0,
+            "current_sender": 0
+        }
+    
+    def reset_archive(self):
+        """Reset archive state."""
+        self.archive_status = {
+            "progress": 0,
+            "message": "Ready",
+            "done": False,
+            "error": None,
+            "archived_count": 0,
+            "total_senders": 0,
+            "current_sender": 0
+        }
+    
+    def reset_important(self):
+        """Reset mark important state."""
+        self.important_status = {
+            "progress": 0,
+            "message": "Ready",
+            "done": False,
+            "error": None,
+            "affected_count": 0,
+            "total_senders": 0,
+            "current_sender": 0
+        }
 
 
 # Global state instance

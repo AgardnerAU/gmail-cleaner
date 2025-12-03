@@ -19,6 +19,7 @@ class FiltersModel(BaseModel):
     larger_than: Optional[str] = Field(default=None, description="Filter emails larger than (e.g., 1M, 5M, 10M)")
     category: Optional[str] = Field(default=None, description="Gmail category filter")
     sender: Optional[str] = Field(default=None, description="Filter emails from specific sender (email address or domain)")
+    label: Optional[str] = Field(default=None, description="Gmail label filter")
     
     @field_validator('older_than')
     @classmethod
@@ -120,6 +121,34 @@ class DeleteBulkRequest(BaseModel):
 class DownloadEmailsRequest(BaseModel):
     """Request to download emails from selected senders."""
     senders: list[str] = Field(default=[], max_length=50, description="List of sender addresses (max 50)")
+
+
+class CreateLabelRequest(BaseModel):
+    """Request to create a new Gmail label."""
+    name: str = Field(..., min_length=1, max_length=100, description="Label name")
+    
+
+class ApplyLabelRequest(BaseModel):
+    """Request to apply a label to emails from selected senders."""
+    label_id: str = Field(..., description="Gmail label ID to apply")
+    senders: list[str] = Field(default=[], max_length=50, description="List of sender addresses (max 50)")
+
+
+class RemoveLabelRequest(BaseModel):
+    """Request to remove a label from emails from selected senders."""
+    label_id: str = Field(..., description="Gmail label ID to remove")
+    senders: list[str] = Field(default=[], max_length=50, description="List of sender addresses (max 50)")
+
+
+class ArchiveRequest(BaseModel):
+    """Request to archive emails from selected senders."""
+    senders: list[str] = Field(default=[], max_length=50, description="List of sender addresses (max 50)")
+
+
+class MarkImportantRequest(BaseModel):
+    """Request to mark/unmark emails as important."""
+    senders: list[str] = Field(default=[], max_length=50, description="List of sender addresses (max 50)")
+    important: bool = Field(default=True, description="True to mark important, False to unmark")
 
 
 # ----- Response Models -----

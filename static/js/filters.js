@@ -133,6 +133,7 @@ GmailCleaner.Filters = {
         const largerThan = document.getElementById('filterLargerThan')?.value || '';
         const category = document.getElementById('filterCategory')?.value || '';
         const sender = document.getElementById('filterSender')?.value?.trim() || '';
+        const label = document.getElementById('filterLabel')?.value || '';
         
         return {
             older_than: olderThan,
@@ -140,7 +141,8 @@ GmailCleaner.Filters = {
             before_date: beforeDate,
             larger_than: largerThan,
             category: category,
-            sender: sender
+            sender: sender,
+            label: label
         };
     },
 
@@ -149,12 +151,14 @@ GmailCleaner.Filters = {
         const largerThan = document.getElementById('filterLargerThan');
         const category = document.getElementById('filterCategory');
         const sender = document.getElementById('filterSender');
+        const label = document.getElementById('filterLabel');
         const dateRangeGroup = document.getElementById('dateRangeGroup');
         
         if (olderThan) olderThan.value = '';
         if (largerThan) largerThan.value = '';
         if (category) category.value = '';
         if (sender) sender.value = '';
+        if (label) label.value = '';
         
         // Clear date picker
         if (this.litepicker) {
@@ -164,6 +168,24 @@ GmailCleaner.Filters = {
         // Hide date range group
         if (dateRangeGroup) {
             dateRangeGroup.classList.add('hidden');
+        }
+    },
+
+    populateLabelDropdown(labels) {
+        const select = document.getElementById('filterLabel');
+        if (!select) return;
+        
+        // Keep the default option
+        select.innerHTML = '<option value="">All labels</option>';
+        
+        // Add user labels
+        if (labels && labels.length > 0) {
+            labels.forEach(label => {
+                const option = document.createElement('option');
+                option.value = label.name;
+                option.textContent = label.name;
+                select.appendChild(option);
+            });
         }
     },
 

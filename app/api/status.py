@@ -18,6 +18,10 @@ from app.services import (
     get_delete_bulk_status,
     get_download_status,
     get_download_csv,
+    get_labels,
+    get_label_operation_status,
+    get_archive_status,
+    get_important_status,
 )
 
 router = APIRouter(prefix="/api", tags=["Status"])
@@ -100,3 +104,29 @@ async def api_download_csv():
 async def api_delete_bulk_status():
     """Get bulk delete operation status."""
     return get_delete_bulk_status()
+
+
+# ----- Label Management Endpoints -----
+
+@router.get("/labels")
+async def api_get_labels():
+    """Get all Gmail labels."""
+    return get_labels()
+
+
+@router.get("/label-operation-status")
+async def api_label_operation_status():
+    """Get label operation status (apply/remove)."""
+    return get_label_operation_status()
+
+
+@router.get("/archive-status")
+async def api_archive_status():
+    """Get archive operation status."""
+    return get_archive_status()
+
+
+@router.get("/important-status")
+async def api_important_status():
+    """Get mark important operation status."""
+    return get_important_status()

@@ -29,10 +29,25 @@ GmailCleaner.Auth = {
             `;
             GmailCleaner.Filters.showBar(true);
             GmailCleaner.UI.showView('unsubscribe');
+            
+            // Load labels for filter dropdown
+            this.loadLabelsForFilter();
         } else {
             userSection.innerHTML = '';
             GmailCleaner.Filters.showBar(false);
             GmailCleaner.UI.showView('login');
+        }
+    },
+
+    async loadLabelsForFilter() {
+        try {
+            // Load labels using the Labels module
+            const labels = await GmailCleaner.Labels.loadLabels();
+            if (labels && labels.user) {
+                GmailCleaner.Filters.populateLabelDropdown(labels.user);
+            }
+        } catch (error) {
+            console.error('Error loading labels for filter:', error);
         }
     },
 

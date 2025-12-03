@@ -144,11 +144,13 @@ GmailCleaner.Delete = {
         if (GmailCleaner.deleteResults.length === 0) {
             resultsSection.classList.add('hidden');
             noResults.classList.remove('hidden');
+            this.setActionButtonsEnabled(false);
             return;
         }
         
         resultsSection.classList.remove('hidden');
         noResults.classList.add('hidden');
+        this.setActionButtonsEnabled(true);
         
         GmailCleaner.deleteResults.forEach((r, i) => {
             const item = document.createElement('div');
@@ -177,6 +179,22 @@ GmailCleaner.Delete = {
                 </div>
             `;
             resultsList.appendChild(item);
+        });
+    },
+
+    setActionButtonsEnabled(enabled) {
+        const buttons = [
+            'applyLabelBtn',
+            'archiveBtn',
+            'importantBtn',
+            'downloadBtn',
+            'deleteSelectedBtn'
+        ];
+        buttons.forEach(id => {
+            const btn = document.getElementById(id);
+            if (btn) {
+                btn.disabled = !enabled;
+            }
         });
     },
 

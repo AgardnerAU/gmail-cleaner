@@ -39,4 +39,20 @@ from .gmail import (
     download_emails_background,
     get_download_status,
     get_download_csv,
+    
+    # Labels
+    get_labels,
+    create_label,
+    delete_label,
+    apply_label_to_senders_background,
+    remove_label_from_senders_background,
+    get_label_operation_status,
+    
+    # Archive
+    archive_emails_background,
+    get_archive_status,
+    
+    # Mark Important
+    mark_important_background,
+    get_important_status,
 )

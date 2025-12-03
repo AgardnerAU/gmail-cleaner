@@ -685,3 +685,366 @@
         width: 100%;
     }
 }
+
+/* Action Row Layout */
+.action-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.action-buttons-row {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-color);
+}
+
+.action-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.action-group-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.action-divider {
+    width: 1px;
+    height: 28px;
+    background: var(--border-color);
+    margin: 0 8px;
+}
+
+/* Unified Action Button Style */
+.btn.btn-action {
+    background: var(--card-bg);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    padding: 8px 14px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+}
+
+.btn.btn-action:hover:not(:disabled) {
+    background: var(--hover-bg);
+    border-color: var(--text-secondary);
+}
+
+.btn.btn-action:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: var(--hover-bg);
+}
+
+/* Special action button colors (when enabled) */
+.btn.btn-action.btn-important-action:not(:disabled) {
+    border-color: #eab308;
+    color: #ca8a04;
+}
+
+.btn.btn-action.btn-important-action:hover:not(:disabled) {
+    background: #fef9c3;
+}
+
+.btn.btn-action.btn-download-action:not(:disabled) {
+    border-color: #10b981;
+    color: #059669;
+}
+
+.btn.btn-action.btn-download-action:hover:not(:disabled) {
+    background: #d1fae5;
+}
+
+.btn.btn-action.btn-delete-action:not(:disabled) {
+    border-color: var(--danger-color);
+    color: var(--danger-color);
+}
+
+.btn.btn-action.btn-delete-action:hover:not(:disabled) {
+    background: #fee2e2;
+}
+
+/* Legacy label styles - keep for dropdown wrapper */
+.label-actions-inline {
+    display: flex;
+    gap: 8px;
+    margin-left: 16px;
+}
+
+.btn.btn-archive {
+    background: #f59e0b !important;
+    color: white !important;
+    border: none;
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: background-color 0.2s;
+}
+
+.btn.btn-archive:hover {
+    background: #d97706 !important;
+    color: white !important;
+}
+
+.btn.btn-important {
+    background: #eab308 !important;
+    color: white !important;
+    border: none;
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: background-color 0.2s;
+}
+
+.btn.btn-important:hover {
+    background: #ca8a04 !important;
+    color: white !important;
+}
+
+.label-dropdown-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.label-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    min-width: 250px;
+    max-height: 350px;
+    overflow-y: auto;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-md);
+    z-index: 1000;
+    margin-top: 4px;
+}
+
+/* Dynamically created dropdown - always visible */
+#labelDropdown {
+    display: block;
+}
+
+.label-dropdown.show {
+    display: block;
+}
+
+.label-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    cursor: pointer;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    font-size: 13px;
+    color: var(--text-primary);
+    transition: background-color 0.15s;
+}
+
+.label-dropdown-item:hover {
+    background: var(--hover-bg);
+}
+
+.label-color-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.label-dropdown-empty {
+    padding: 16px;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+/* Label Dropdown Content (dynamically created) */
+.label-dropdown-content {
+    padding: 8px 0;
+}
+
+.label-dropdown-header {
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.label-create-section {
+    display: flex;
+    gap: 8px;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.label-input {
+    flex: 1;
+    padding: 6px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    outline: none;
+}
+
+.label-input:focus {
+    border-color: var(--primary-color);
+}
+
+.label-create-btn {
+    padding: 6px 12px;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.label-create-btn:hover {
+    background: var(--primary-dark);
+}
+
+.label-create-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.label-list-header {
+    padding: 8px 12px 4px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+}
+
+.label-list {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.label-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: background-color 0.15s;
+}
+
+.label-item:hover {
+    background: var(--hover-bg);
+}
+
+.label-icon {
+    font-size: 14px;
+}
+
+.label-name {
+    font-size: 13px;
+    color: var(--text-primary);
+}
+
+.label-empty {
+    padding: 16px;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-style: italic;
+}
+
+/* Label Operation Overlay */
+.label-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.label-overlay-content {
+    background: var(--card-bg);
+    padding: 32px 48px;
+    border-radius: var(--radius-md);
+    text-align: center;
+    box-shadow: var(--shadow-lg);
+    max-width: 400px;
+}
+
+.label-overlay-spinner {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 16px;
+}
+
+.label-overlay-content h3 {
+    font-size: 18px;
+    font-weight: 500;
+    margin-bottom: 16px;
+    color: var(--text-primary);
+}
+
+.label-progress-container {
+    width: 100%;
+    height: 8px;
+    background: var(--hover-bg);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 12px;
+}
+
+.label-progress-bar {
+    height: 100%;
+    background: var(--primary-color);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+    width: 0;
+}
+
+.label-overlay-content p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin: 8px 0;
+}
+
+.label-stats {
+    font-size: 12px;
+    color: var(--text-tertiary);
+}
+
