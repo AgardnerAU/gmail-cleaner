@@ -228,10 +228,16 @@ If you're accessing the app via a **custom domain** (e.g., `gmail.example.com`) 
    ```yaml
    environment:
      - WEB_AUTH=true
-     - OAUTH_HOST=gmail.example.com  # Your custom domain or server IP
+     - OAUTH_HOST=gmail.example.com  # Just the hostname - NO http:// or https://
    ```
 
-3. **For HTTPS with reverse proxy**, make sure your proxy forwards port 8767 for the OAuth callback, or use the same port as your main app and configure accordingly.
+   > **⚠️ Common mistake**: Use only the hostname (e.g., `gmail.example.com`), NOT the full URL (e.g., ~~`https://gmail.example.com`~~)
+
+3. **For HTTPS with reverse proxy**: 
+   - The OAuth callback still uses HTTP on port 8767 internally
+   - Your reverse proxy should forward port 8767 for the OAuth callback
+   - The **Authorized redirect URI** in Google Cloud must be `http://YOUR_DOMAIN:8767/` (HTTP, not HTTPS)
+   - Alternatively, you can proxy both ports through HTTPS and update the redirect URI accordingly
 
 > **Note**: The OAuth callback must be reachable from your browser. If using a reverse proxy, you may need to proxy both port 8766 (app) and port 8767 (OAuth callback).
 
