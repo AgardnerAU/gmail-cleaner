@@ -49,14 +49,21 @@ jobs:
             const currentAssignees = (pr.assignees || []).map(a => a.login);
 
             // Add creator if not already assigned
+            // Add creator if not already assigned
             if (!currentAssignees.includes(creator)) {
-              await github.rest.issues.addAssignees({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: pr.number,
-                assignees: [creator],
-              });
-              console.log(`✅ Auto-assigned ${creator} to PR #${pr.number}`);
+              try {
+                await github.rest.issues.addAssignees({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: pr.number,
+                  assignees: [creator],
+                });
+                console.log(`✅ Auto-assigned ${creator} to PR #${pr.number}`);
+              } catch (error) {
+                console.error(`❌ Failed to auto-assign ${creator}: ${error.message}`);
+                core.warning(`Could not auto-assign PR creator: ${error.message}`);
+              }
+            } else {
             } else {
               console.log(`ℹ️ ${creator} is already assigned to PR #${pr.number}`);
             }
