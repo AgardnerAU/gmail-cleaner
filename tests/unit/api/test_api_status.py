@@ -50,7 +50,7 @@ class TestStatusEndpoints:
         # Check expected web auth fields
         assert "web_auth_mode" in data or "has_credentials" in data
 
-    @patch("app.services.gmail.get_gmail_service")
+    @patch("app.services.auth.get_gmail_service")
     def test_get_unread_count(self, mock_get_service, client):
         """GET /api/unread-count should return unread count."""
         # Mock get_gmail_service to return error (no auth) to prevent browser opening

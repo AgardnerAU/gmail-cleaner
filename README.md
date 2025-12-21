@@ -133,6 +133,38 @@ docker logs $(docker ps -q --filter name=gmail-cleaner)
 
 > **🌐 Using a custom domain or remote server?** See [Custom Domain / Reverse Proxy / Remote Server](#custom-domain--reverse-proxy--remote-server) for configuration instructions.
 
+#### Persisting Authentication (token.json volume)
+
+By default, the `token.json` volume is commented out in `docker-compose.yml`.
+
+**Workflow:**
+
+1. **First-time setup (keep it commented):**
+   - Keep the `token.json` volume commented during first authentication
+   - The token will be created inside the Docker container during the OAuth flow
+   - After successful authentication, the token is available inside the container
+
+2. **From the second time onwards (uncomment it):**
+
+   - Now uncomment the `token.json` volume in `docker-compose.yml`:
+
+     ```yaml
+     - type: bind
+       source: ./token.json
+       target: /app/token.json
+       bind:
+         create_host_path: false
+     ```
+
+   - Restart the container: `docker compose down && docker compose up`
+   - Your authentication will now persist across container restarts!
+
+**When to keep it commented:**
+- ⚠️ First-time setup (until you've successfully authenticated)
+- Debugging authentication issues
+- Testing with different accounts
+- When you want to force a fresh authentication
+
 ### Option B: Python (with uv)
 
 ```bash

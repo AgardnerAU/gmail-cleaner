@@ -4,8 +4,8 @@ Application Configuration
 Central configuration and settings for the application.
 """
 
-import os
-from pydantic_settings import BaseSettings
+from pydantic import Field, field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -19,10 +19,26 @@ class Settings(BaseSettings):
     oauth_port: int = 8767
 
     # Auth
-    web_auth: bool = os.environ.get("WEB_AUTH", "false").lower() == "true"
-    oauth_host: str = os.environ.get(
-        "OAUTH_HOST", "localhost"
-    )  # Custom host for OAuth redirect (e.g., your domain or IP)
+    web_auth: bool = Field(
+        default=False,
+        description="Enable web-based authentication mode",
+    )
+    oauth_host: str = Field(
+        default="localhost",
+        description="Custom host for OAuth redirect (e.g., your domain or IP)",
+    )
+
+    @field_validator("web_auth", mode="before")
+    @classmethod
+    def validate_web_auth(cls, v) -> bool:
+        """Convert string environment variable to boolean (case-insensitive)."""
+        if isinstance(v, bool):
+            return v
+        if isinstance(v, str):
+            normalized = v.lower().strip()
+            return normalized in ("true", "1", "yes", "on")
+        return bool(v)
+
     credentials_file: str = "credentials.json"
     token_file: str = "token.json"
 
@@ -32,9 +48,11 @@ class Settings(BaseSettings):
         "https://www.googleapis.com/auth/gmail.modify",
     ]
 
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+    )
 
 
 # Global settings instance

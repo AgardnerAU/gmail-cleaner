@@ -1,19 +1,36 @@
 services:
   gmail-cleaner:
-    # Multi-arch image: works natively on both AMD64 and ARM64 (Apple Silicon)
-    image: ghcr.io/gururagavendra/gmail-cleaner:latest
+    # Option 1: Multi-arch image: works natively on both AMD64 and ARM64 (Apple Silicon)
+    # image: ghcr.io/gururagavendra/gmail-cleaner:latest
+
     # Option 2: Build locally (uncomment below, comment out image above)
-    # build: .
+    build: .
     ports:
       - "8766:8766"  # Web UI
       - "8767:8767"  # OAuth callback
     volumes:
-      # Mount credentials file (required)
-      - ./credentials.json:/app/credentials.json:ro
-      # Optionally mount token file to persist auth across restarts
-      # - ./token.json:/app/token.json
+      - type: bind
+        source: ./credentials.json
+        target: /app/credentials.json
+        bind:
+          create_host_path: false
+        read_only: true
+      # Uncomment the token.json volume below if you want to persist authentication
+      # across container restarts. This means you won't need to sign in again after
+      # restarting the container.
+      #
+      # IMPORTANT: Keep it commented for FIRST-TIME setup. During first authentication,
+      # the token.json will be created inside the Docker container. After successful
+      # authentication, you can uncomment this volume mapping from the SECOND time
+      # onwards to persist your authentication across container restarts.
+      # - type: bind
+      #   source: ./token.json
+      #   target: /app/token.json
+      #   bind:
+      #     create_host_path: false
     environment:
       - WEB_AUTH=true
+
       # Uncomment and set OAUTH_HOST if accessing via custom domain or server IP
       # - OAUTH_HOST=gmail.example.com
     restart: unless-stopped
