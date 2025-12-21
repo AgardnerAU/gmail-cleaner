@@ -41,7 +41,7 @@ Works on **all major platforms** - both Docker and local installation:
 
 ## Demo
 
-![Gmail Cleaner Demo](demo.gif)
+![Gmail Cleaner Demo](media/demo.gif)
 
 **[Watch Setup Video on YouTube](https://youtu.be/CmOWn8Tm5ZE)** - Step-by-step video on how to setup the repo and run the project locally.
 
