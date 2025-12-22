@@ -48,7 +48,7 @@ Works on **all major platforms** - both Docker and local installation:
 - **Gitignored Secrets** - `credentials.json` and `token.json` never get committed
 
 ## 🆘 Need Help Setting Up?
-Struggling with Docker, Google Cloud Console, or `credentials.json`? I can help you set it up personally!<br>
+A few people reached out to me on Reddit and via email saying they love the idea, but don’t have the technical expertise to run this software themselves. I’d also like to grow the project further, so support would really help make the time I invest in it more worthwhile.<br>Struggling with Docker, Google Cloud Console, or `credentials.json`? I can help you set it up personally!<br>
 I offer a **1-on-1 Setup Service ($8)** where we hop on a Google Meet, you share your screen, and I guide you through the entire installation until it's working perfectly.
 
 - **Secure:** I guide you; I never see your passwords.
