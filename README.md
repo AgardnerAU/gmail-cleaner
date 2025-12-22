@@ -97,7 +97,10 @@ Lets make this tool a better one by improving as much as possible, All features 
    | Setup | Application Type | Redirect URI |
    |-------|------------------|--------------|
    | **Local/Desktop** (Python with browser) | Desktop app | Not needed |
-   | **Docker/Remote Server** | Web application | `http://localhost:8767/`<br>or `http://YOUR_DOMAIN:8767/` |
+   | **Docker (localhost)** | Web application | `http://localhost:8767/` |
+   | **Docker/Remote Server (public domain)** | Web application | `http://YOUR_PUBLIC_DOMAIN:8767/` |
+
+   > **⚠️ Important**: Redirect URIs must use a **domain name** (e.g., `gmail.example.com`), **NOT an IP address** (e.g., `192.168.1.100`). Google OAuth does not allow IP addresses. If you need to use a server IP, use a [Dynamic DNS service](#custom-domain--reverse-proxy--remote-server) to get a domain name.
 
    - Name: "Gmail Cleanup" (or anything)
    - Click **Create**
@@ -239,6 +242,7 @@ If you're using **custom port mappings** in Docker (e.g., mapping `18766:8766` a
 2. **Update Google Cloud Console** redirect URI:
    - Go to **Clients** → Your OAuth client → **Authorized redirect URIs**
    - Update to: `http://localhost:18767/` (or `http://YOUR_DOMAIN:18767/` if using custom domain)
+   - **Note**: Must be a domain name, not an IP address
 
 3. **Restart the container**:
 
@@ -250,13 +254,29 @@ If you're using **custom port mappings** in Docker (e.g., mapping `18766:8766` a
 
 ### Custom Domain / Reverse Proxy / Remote Server
 
-If you're accessing via a **custom domain** (e.g., `gmail.example.com`) or **server IP** instead of `localhost`:
+If you're accessing via a **custom domain** (e.g., `gmail.example.com`) instead of `localhost`:
 
-> **Important**: Use **Web application** credentials (not Desktop app) for remote server setups. See [Step 7 in Get Google OAuth Credentials](#1-get-google-oauth-credentials).
+> **⚠️ Important**:
+> - Use **Web application** credentials (not Desktop app) for remote server setups. See [Step 7 in Get Google OAuth Credentials](#1-get-google-oauth-credentials).
+> - **IP addresses are NOT allowed** in Google OAuth redirect URIs. You must use a domain name (e.g., `gmail.example.com`), not an IP address (e.g., `192.168.1.100`).
+> - Google requires redirect URIs to use a public top-level domain (`.com`, `.org`, `.net`, etc.)
+
+**Allowed redirect URIs:**
+- ✅ `http://localhost:8767/` (for local access)
+- ✅ `http://gmail.example.com:8767/` (custom domain)
+- ✅ `http://mygmail.duckdns.org:8767/` (dynamic DNS)
+- ❌ `http://192.168.1.100:8767/` (IP addresses not allowed)
+- ❌ `http://10.0.0.5:8767/` (private IPs not allowed)
+
+**If you need to use a server IP:**
+- Use a **dynamic DNS service** (free options: [DuckDNS](https://www.duckdns.org/), [No-IP](https://www.noip.com/), [Dynu](https://www.dynu.com/))
+- Point the domain to your server's IP address
+- Use the domain name in OAuth (e.g., `http://mygmail.duckdns.org:8767/`)
 
 1. **Update Google Cloud Console**:
    - Go to **Clients** → Your OAuth client → **Authorized redirect URIs**
    - Add: `http://YOUR_DOMAIN:8767/` (or external port if using custom mapping)
+   - **Must be a domain name, not an IP address**
 
 2. **Update docker-compose.yml**:
 
@@ -268,7 +288,9 @@ If you're accessing via a **custom domain** (e.g., `gmail.example.com`) or **ser
      - OAUTH_EXTERNAL_PORT=18767
    ```
 
-   > **⚠️ Common mistake**: Use only the hostname (e.g., `gmail.example.com`), NOT the full URL (e.g., ~~`https://gmail.example.com`~~)
+   > **⚠️ Common mistakes**:
+   > - Use only the hostname (e.g., `gmail.example.com`), NOT the full URL (e.g., ~~`https://gmail.example.com`~~)
+   > - Use a domain name, NOT an IP address (e.g., ~~`192.168.1.100`~~)
 
 3. **For HTTPS with reverse proxy**:
    - The OAuth callback uses HTTP on port 8767 internally
@@ -332,6 +354,32 @@ docker logs $(docker ps -q --filter name=gmail-cleaner)
 ```
 
 Look for a URL starting with `https://accounts.google.com/o/oauth2/...`
+
+#### "Invalid Redirect: must end with a public top-level domain" or "Invalid Redirect: must use a domain that is a valid top private domain"
+
+This error occurs when you try to use an **IP address** in the redirect URI (e.g., `http://192.168.1.100:8767/`).
+
+**Google OAuth does NOT allow IP addresses** - you must use a domain name.
+
+**Solutions:**
+
+1. **Use localhost** (if accessing from the same machine):
+   - Redirect URI: `http://localhost:8767/`
+   - Set `OAUTH_HOST=localhost` in docker-compose.yml
+
+2. **Use a domain name** (if you own one):
+   - Point your domain to your server's IP (via DNS A record)
+   - Redirect URI: `http://gmail.yourdomain.com:8767/`
+   - Set `OAUTH_HOST=gmail.yourdomain.com` in docker-compose.yml
+
+3. **Use Dynamic DNS** (free option for home servers):
+   - Sign up for a free DDNS service: [DuckDNS](https://www.duckdns.org/), [No-IP](https://www.noip.com/), or [Dynu](https://www.dynu.com/)
+   - Get a domain like `mygmail.duckdns.org`
+   - Point it to your server's public IP address
+   - Redirect URI: `http://mygmail.duckdns.org:8767/`
+   - Set `OAUTH_HOST=mygmail.duckdns.org` in docker-compose.yml
+
+**Remember:** The redirect URI in Google Cloud Console must exactly match what you set in `OAUTH_HOST` + port.
 
 ## Contributing
 
