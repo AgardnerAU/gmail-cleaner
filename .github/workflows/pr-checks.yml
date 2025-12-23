@@ -64,6 +64,5 @@ jobs:
                 core.warning(`Could not auto-assign PR creator: ${error.message}`);
               }
             } else {
-            } else {
               console.log(`ℹ️ ${creator} is already assigned to PR #${pr.number}`);
             }
