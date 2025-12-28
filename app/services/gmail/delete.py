@@ -27,21 +27,19 @@ def scan_senders_for_delete(limit: int = 1000, filters: Optional[dict] = None):
     # Validate input
     if limit <= 0:
         state.reset_delete_scan()
-        state.delete_scan_status["error"] = "Limit must be greater than 0"
-        state.delete_scan_status["done"] = True
+        state.update_delete_scan_status(error="Limit must be greater than 0", done=True)
         return
 
     state.reset_delete_scan()
-    state.delete_scan_status["message"] = "Connecting to Gmail..."
+    state.update_delete_scan_status(message="Connecting to Gmail...")
 
     service, error = get_gmail_service()
     if error:
-        state.delete_scan_status["error"] = error
-        state.delete_scan_status["done"] = True
+        state.update_delete_scan_status(error=error, done=True)
         return
 
     try:
-        state.delete_scan_status["message"] = "Fetching emails..."
+        state.update_delete_scan_status(message="Fetching emails...")
 
         query = build_gmail_query(filters)
 
@@ -72,11 +70,10 @@ def scan_senders_for_delete(limit: int = 1000, filters: Optional[dict] = None):
         total = len(messages)
 
         if total == 0:
-            state.delete_scan_status["message"] = "No emails found"
-            state.delete_scan_status["done"] = True
+            state.update_delete_scan_status(message="No emails found", done=True)
             return
 
-        state.delete_scan_status["message"] = f"Scanning {total} emails..."
+        state.update_delete_scan_status(message=f"Scanning {total} emails...")
 
         # Group by sender using Gmail Batch API
         sender_counts: dict[str, dict] = defaultdict(
@@ -149,8 +146,9 @@ def scan_senders_for_delete(limit: int = 1000, filters: Optional[dict] = None):
             batch.execute()
 
             progress = int((i + len(batch_ids)) / total * 100)
-            state.delete_scan_status["progress"] = progress
-            state.delete_scan_status["message"] = f"Scanned {processed}/{total} emails"
+            state.update_delete_scan_status(
+                progress=progress, message=f"Scanned {processed}/{total} emails"
+            )
 
             # Rate limiting
             if (i // batch_size + 1) % 5 == 0:
@@ -163,13 +161,13 @@ def scan_senders_for_delete(limit: int = 1000, filters: Optional[dict] = None):
             reverse=True,
         )
 
-        state.delete_scan_results = sorted_senders
-        state.delete_scan_status["message"] = f"Found {len(sorted_senders)} senders"
-        state.delete_scan_status["done"] = True
+        state.set_delete_scan_results(sorted_senders)
+        state.update_delete_scan_status(
+            message=f"Found {len(sorted_senders)} senders", done=True
+        )
 
     except Exception as e:
-        state.delete_scan_status["error"] = str(e)
-        state.delete_scan_status["done"] = True
+        state.update_delete_scan_status(error=str(e), done=True)
 
 
 def get_delete_scan_status() -> dict:
@@ -209,7 +207,7 @@ def delete_emails_by_sender(sender: str) -> dict:
 
     # Get size info from cached results before deleting
     size_freed = 0
-    for r in state.delete_scan_results:
+    for r in state.get_delete_scan_results():
         if r.get("email") == sender:
             size_freed = r.get("total_size", 0)
             break
@@ -264,9 +262,10 @@ def delete_emails_by_sender(sender: str) -> dict:
             deleted += len(batch)
 
         # Remove sender from cached results
-        state.delete_scan_results = [
-            r for r in state.delete_scan_results if r.get("email") != sender
-        ]
+        current_results = state.get_delete_scan_results()
+        state.set_delete_scan_results(
+            [r for r in current_results if r.get("email") != sender]
+        )
 
         return {
             "success": True,
@@ -335,18 +334,17 @@ def delete_emails_bulk_background(senders: list[str]) -> None:
 
     # Validate input
     if not senders or not isinstance(senders, list):
-        state.delete_bulk_status["done"] = True
-        state.delete_bulk_status["error"] = "No senders specified"
+        state.update_delete_bulk_status(done=True, error="No senders specified")
         return
 
     total_senders = len(senders)
-    state.delete_bulk_status["total_senders"] = total_senders
-    state.delete_bulk_status["message"] = "Collecting emails to delete..."
+    state.update_delete_bulk_status(
+        total_senders=total_senders, message="Collecting emails to delete..."
+    )
 
     service, error = get_gmail_service()
     if error:
-        state.delete_bulk_status["done"] = True
-        state.delete_bulk_status["error"] = error
+        state.update_delete_bulk_status(done=True, error=error)
         return
 
     # Phase 1: Collect all message IDs from all senders
@@ -354,11 +352,12 @@ def delete_emails_bulk_background(senders: list[str]) -> None:
     errors = []
 
     for i, sender in enumerate(senders):
-        state.delete_bulk_status["current_sender"] = i + 1
-        state.delete_bulk_status["progress"] = int(
-            (i / total_senders) * 40
-        )  # 0-40% for collecting
-        state.delete_bulk_status["message"] = f"Finding emails from {sender}..."
+        progress = int((i / total_senders) * 40)  # 0-40% for collecting
+        state.update_delete_bulk_status(
+            current_sender=i + 1,
+            progress=progress,
+            message=f"Finding emails from {sender}...",
+        )
 
         try:
             query = f"from:{sanitize_gmail_query_value(sender)}"
@@ -389,14 +388,14 @@ def delete_emails_bulk_background(senders: list[str]) -> None:
             errors.append(f"{sender}: {str(e)}")
 
     if not all_message_ids:
-        state.delete_bulk_status["progress"] = 100
-        state.delete_bulk_status["done"] = True
-        state.delete_bulk_status["message"] = "No emails found to delete"
+        state.update_delete_bulk_status(
+            progress=100, done=True, message="No emails found to delete"
+        )
         return
 
     # Phase 2: Batch delete all collected IDs (larger batches = fewer API calls)
     total_emails = len(all_message_ids)
-    state.delete_bulk_status["message"] = f"Deleting {total_emails} emails..."
+    state.update_delete_bulk_status(message=f"Deleting {total_emails} emails...")
 
     batch_size = 1000  # Gmail allows up to 1000 per batchModify
     deleted = 0
@@ -408,34 +407,37 @@ def delete_emails_bulk_background(senders: list[str]) -> None:
                 userId="me", body={"ids": batch, "addLabelIds": ["TRASH"]}
             ).execute()
             deleted += len(batch)
-            state.delete_bulk_status["deleted_count"] = deleted
             # Progress: 40-100% for deleting
-            state.delete_bulk_status["progress"] = 40 + int(
-                (deleted / total_emails) * 60
-            )
-            state.delete_bulk_status["message"] = (
-                f"Deleted {deleted}/{total_emails} emails..."
+            progress = 40 + int((deleted / total_emails) * 60)
+            state.update_delete_bulk_status(
+                deleted_count=deleted,
+                progress=progress,
+                message=f"Deleted {deleted}/{total_emails} emails...",
             )
     except Exception as e:
         errors.append(f"Batch delete error: {str(e)}")
 
     # Remove deleted senders from cached scan results
-    state.delete_scan_results = [
-        r for r in state.delete_scan_results if r.get("email") not in senders
-    ]
+    current_results = state.get_delete_scan_results()
+    filtered_results = [r for r in current_results if r.get("email") not in senders]
+    state.set_delete_scan_results(filtered_results)
 
     # Done
-    state.delete_bulk_status["progress"] = 100
-    state.delete_bulk_status["done"] = True
-    state.delete_bulk_status["deleted_count"] = deleted
-
     if errors:
-        state.delete_bulk_status["error"] = f"Some errors: {'; '.join(errors[:3])}"
-        state.delete_bulk_status["message"] = (
-            f"Deleted {deleted} emails with some errors"
+        state.update_delete_bulk_status(
+            progress=100,
+            done=True,
+            deleted_count=deleted,
+            error=f"Some errors: {'; '.join(errors[:3])}",
+            message=f"Deleted {deleted} emails with some errors",
         )
     else:
-        state.delete_bulk_status["message"] = f"Successfully deleted {deleted} emails"
+        state.update_delete_bulk_status(
+            progress=100,
+            done=True,
+            deleted_count=deleted,
+            message=f"Successfully deleted {deleted} emails",
+        )
 
 
 def get_delete_bulk_status() -> dict:
