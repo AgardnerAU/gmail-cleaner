@@ -361,8 +361,7 @@ def get_gmail_service():
                             )
 
                         # Store OAuth state for CSRF protection
-                        with state.oauth_state_lock:
-                            state.oauth_state["state"] = oauth_state
+                        state.set_oauth_state(oauth_state)
                         logger.debug(
                             f"Stored OAuth state for CSRF protection: {oauth_state[:20]}..."
                             if oauth_state and len(oauth_state) > 20
@@ -371,7 +370,7 @@ def get_gmail_service():
 
                         # Set pending auth URL for web auth mode
                         if is_web_auth_mode():
-                            state.pending_auth_url["url"] = authorization_url
+                            state.set_pending_auth_url(authorization_url)
 
                         # Create a simple HTTP server to handle the callback
                         callback_event = threading.Event()
@@ -583,9 +582,8 @@ def get_gmail_service():
                 finally:
                     # Always reset auth state, even on error
                     _auth_in_progress["active"] = False
-                    state.pending_auth_url["url"] = None
-                    with state.oauth_state_lock:
-                        state.oauth_state["state"] = None
+                    state.set_pending_auth_url(None)
+                    state.set_oauth_state(None)
 
             oauth_thread = threading.Thread(target=run_oauth, daemon=True)
             oauth_thread.start()
@@ -608,11 +606,11 @@ def get_gmail_service():
 
     try:
         profile = service.users().getProfile(userId="me").execute()
-        state.current_user["email"] = profile.get("emailAddress", "Unknown")
-        state.current_user["logged_in"] = True
+        state.update_current_user(
+            email=profile.get("emailAddress", "Unknown"), logged_in=True
+        )
     except Exception:
-        state.current_user["email"] = "Unknown"
-        state.current_user["logged_in"] = True
+        state.update_current_user(email="Unknown", logged_in=True)
 
     return service, None
 
@@ -654,19 +652,19 @@ def check_login_status() -> dict:
                 if creds and creds.valid:
                     service = build("gmail", "v1", credentials=creds)
                     profile = service.users().getProfile(userId="me").execute()
-                    state.current_user["email"] = profile.get("emailAddress", "Unknown")
-                    state.current_user["logged_in"] = True
-                    return state.current_user.copy()
+                    state.update_current_user(
+                        email=profile.get("emailAddress", "Unknown"), logged_in=True
+                    )
+                    return state.get_current_user()
                 elif creds and creds.expired and creds.refresh_token:
                     refreshed_creds = _try_refresh_creds(creds)
                     if refreshed_creds:
                         service = build("gmail", "v1", credentials=refreshed_creds)
                         profile = service.users().getProfile(userId="me").execute()
-                        state.current_user["email"] = profile.get(
-                            "emailAddress", "Unknown"
+                        state.update_current_user(
+                            email=profile.get("emailAddress", "Unknown"), logged_in=True
                         )
-                        state.current_user["logged_in"] = True
-                        return state.current_user.copy()
+                        return state.get_current_user()
             except (ValueError, OSError) as e:
                 # Token file is invalid/corrupted
                 logger.warning(f"Failed to load or refresh credentials: {e}")
@@ -679,6 +677,5 @@ def check_login_status() -> dict:
                 # API errors, network issues, etc.
                 logger.error(f"Error checking login status: {e}", exc_info=True)
 
-    state.current_user["email"] = None
-    state.current_user["logged_in"] = False
-    return state.current_user.copy()
+    state.update_current_user(email=None, logged_in=False)
+    return state.get_current_user()
