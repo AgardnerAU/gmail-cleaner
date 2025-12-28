@@ -8,6 +8,7 @@ import time
 
 from app.core import state
 from app.services.auth import get_gmail_service
+from app.services.gmail.helpers import sanitize_gmail_query_value
 
 
 def archive_emails_background(senders: list[str]):
@@ -38,7 +39,7 @@ def archive_emails_background(senders: list[str]):
             state.archive_status["progress"] = int((i / len(senders)) * 100)
 
             # Find all emails from this sender in INBOX
-            query = f"from:{sender} in:inbox"
+            query = f"from:{sanitize_gmail_query_value(sender)} in:inbox"
             message_ids = []
             page_token = None
 

@@ -8,6 +8,7 @@ import time
 
 from app.core import state
 from app.services.auth import get_gmail_service
+from app.services.gmail.helpers import sanitize_gmail_query_value
 
 
 def mark_important_background(senders: list[str], *, important: bool = True) -> None:
@@ -39,7 +40,7 @@ def mark_important_background(senders: list[str], *, important: bool = True) -> 
             state.important_status["progress"] = int((i / len(senders)) * 100)
 
             # Find all emails from this sender
-            query = f"from:{sender}"
+            query = f"from:{sanitize_gmail_query_value(sender)}"
             message_ids = []
             page_token = None
 

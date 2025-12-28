@@ -12,7 +12,12 @@ from typing import Optional
 
 from app.core import state
 from app.services.auth import get_gmail_service
-from app.services.gmail.helpers import build_gmail_query, get_sender_info, get_subject
+from app.services.gmail.helpers import (
+    build_gmail_query,
+    get_sender_info,
+    get_subject,
+    sanitize_gmail_query_value,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -215,7 +220,7 @@ def delete_emails_by_sender(sender: str) -> dict:
 
     try:
         # Find all emails from sender
-        query = f"from:{sender}"
+        query = f"from:{sanitize_gmail_query_value(sender)}"
         results = (
             service.users()
             .messages()
@@ -356,7 +361,7 @@ def delete_emails_bulk_background(senders: list[str]) -> None:
         state.delete_bulk_status["message"] = f"Finding emails from {sender}..."
 
         try:
-            query = f"from:{sender}"
+            query = f"from:{sanitize_gmail_query_value(sender)}"
             results = (
                 service.users()
                 .messages()

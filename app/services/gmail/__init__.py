@@ -19,6 +19,7 @@ This module is split into multiple files for better organization:
 from app.services.auth import get_gmail_service
 from app.services.gmail.helpers import (
     build_gmail_query,
+    sanitize_gmail_query_value,
     validate_unsafe_url,
     get_unsubscribe_from_headers,
     get_sender_info,
@@ -95,6 +96,7 @@ __all__ = [
     "get_download_status",
     # Helpers
     "build_gmail_query",
+    "sanitize_gmail_query_value",
     "validate_unsafe_url",
     # Important
     "get_important_status",

@@ -6,6 +6,7 @@ Functions for managing Gmail labels.
 
 from app.core import state
 from app.services.auth import get_gmail_service
+from app.services.gmail.helpers import sanitize_gmail_query_value
 
 
 def get_labels() -> dict:
@@ -184,9 +185,9 @@ def _apply_label_operation_background(
         try:
             # Build query: for remove, include label filter; for add, just sender
             if add_label:
-                query = f"from:{sender}"
+                query = f"from:{sanitize_gmail_query_value(sender)}"
             else:
-                query = f"from:{sender} label:{label_name}"
+                query = f"from:{sanitize_gmail_query_value(sender)} label:{label_name}"
 
             results = (
                 service.users()
