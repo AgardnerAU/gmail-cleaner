@@ -105,6 +105,8 @@ def _try_refresh_creds(creds: Credentials) -> Credentials | None:
         try:
             with open(settings.token_file, "w") as token:
                 token.write(creds.to_json())
+            # Restrict file permissions to owner only (0600)
+            os.chmod(settings.token_file, 0o600)
         except OSError:
             # Token file write failed - creds are refreshed in memory but not saved
             logger.exception("Failed to save refreshed token")
@@ -339,7 +341,10 @@ def get_gmail_service():
                             )
 
                         # Construct redirect URI using external port
-                        redirect_uri = f"http://{settings.oauth_host}:{redirect_port}/"
+                        # Use HTTPS for non-localhost hosts to protect auth code in transit
+                        is_localhost = settings.oauth_host in ("localhost", "127.0.0.1", "::1")
+                        scheme = "http" if is_localhost else "https"
+                        redirect_uri = f"{scheme}://{settings.oauth_host}:{redirect_port}/"
                         flow.redirect_uri = redirect_uri
                         logger.info(
                             f"Using custom redirect URI {redirect_uri} "
@@ -517,6 +522,8 @@ def get_gmail_service():
                     try:
                         with open(settings.token_file, "w") as token:
                             token.write(new_creds.to_json())
+                        # Restrict file permissions to owner only (0600)
+                        os.chmod(settings.token_file, 0o600)
                         print("OAuth complete! Token saved.")
                     except OSError as e:
                         logger.error(f"Failed to save token file: {e}", exc_info=True)
@@ -620,8 +627,8 @@ def sign_out() -> dict:
     if os.path.exists(settings.token_file):
         os.remove(settings.token_file)
 
-    # Reset state
-    state.current_user = {"email": None, "logged_in": False}
+    # Reset state (use thread-safe setter)
+    state.update_current_user(email=None, logged_in=False)
     state.reset_scan()
     state.reset_delete_scan()
     state.reset_mark_read()
