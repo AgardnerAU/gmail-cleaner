@@ -16,7 +16,6 @@ from app.services.gmail.helpers import (
     build_gmail_query,
     get_sender_info,
     get_subject,
-    sanitize_gmail_query_value,
 )
 
 logger = logging.getLogger(__name__)
@@ -205,57 +204,40 @@ def delete_emails_by_sender(sender: str) -> dict:
             "message": "Invalid sender format. Must be a valid email address or domain.",
         }
 
-    # Get size info from cached results before deleting
-    size_freed = 0
-    for r in state.get_delete_scan_results():
-        if r.get("email") == sender:
-            size_freed = r.get("total_size", 0)
-            break
+    # Get cached scan results - use message_ids to delete only what was scanned
+    scan_results = state.get_delete_scan_results()
+    sender_data = next((r for r in scan_results if r.get("email") == sender), None)
+
+    if not sender_data:
+        return {
+            "success": False,
+            "deleted": 0,
+            "size_freed": 0,
+            "message": "No scan results found for this sender. Please scan first.",
+        }
+
+    message_ids = sender_data.get("message_ids", [])
+    size_freed = sender_data.get("total_size", 0)
+
+    if not message_ids:
+        return {
+            "success": True,
+            "deleted": 0,
+            "size_freed": 0,
+            "message": "No emails found",
+        }
 
     service, error = get_gmail_service()
     if error:
         return {"success": False, "deleted": 0, "size_freed": 0, "message": error}
 
     try:
-        # Find all emails from sender
-        query = f"from:{sanitize_gmail_query_value(sender)}"
-        results = (
-            service.users()
-            .messages()
-            .list(userId="me", q=query, maxResults=500)
-            .execute()
-        )
-        messages = results.get("messages", [])
-
-        while "nextPageToken" in results:
-            results = (
-                service.users()
-                .messages()
-                .list(
-                    userId="me",
-                    q=query,
-                    maxResults=500,
-                    pageToken=results["nextPageToken"],
-                )
-                .execute()
-            )
-            messages.extend(results.get("messages", []))
-
-        if not messages:
-            return {
-                "success": True,
-                "deleted": 0,
-                "size_freed": 0,
-                "message": "No emails found",
-            }
-
-        # Batch delete (move to trash)
-        ids = [msg["id"] for msg in messages]
+        # Batch delete using cached message IDs (move to trash)
         batch_size = 100
         deleted = 0
 
-        for i in range(0, len(ids), batch_size):
-            batch = ids[i : i + batch_size]
+        for i in range(0, len(message_ids), batch_size):
+            batch = message_ids[i : i + batch_size]
             service.users().messages().batchModify(
                 userId="me", body={"ids": batch, "addLabelIds": ["TRASH"]}
             ).execute()
@@ -347,45 +329,26 @@ def delete_emails_bulk_background(senders: list[str]) -> None:
         state.update_delete_bulk_status(done=True, error=error)
         return
 
-    # Phase 1: Collect all message IDs from all senders
+    # Phase 1: Collect message IDs from cached scan results
     all_message_ids = []
     errors = []
+    scan_results = state.get_delete_scan_results()
 
     for i, sender in enumerate(senders):
         progress = int((i / total_senders) * 40)  # 0-40% for collecting
         state.update_delete_bulk_status(
             current_sender=i + 1,
             progress=progress,
-            message=f"Finding emails from {sender}...",
+            message=f"Getting cached emails from {sender}...",
         )
 
-        try:
-            query = f"from:{sanitize_gmail_query_value(sender)}"
-            results = (
-                service.users()
-                .messages()
-                .list(userId="me", q=query, maxResults=500)
-                .execute()
-            )
-            messages = results.get("messages", [])
+        # Look up cached message_ids from scan results
+        sender_data = next((r for r in scan_results if r.get("email") == sender), None)
 
-            while "nextPageToken" in results:
-                results = (
-                    service.users()
-                    .messages()
-                    .list(
-                        userId="me",
-                        q=query,
-                        maxResults=500,
-                        pageToken=results["nextPageToken"],
-                    )
-                    .execute()
-                )
-                messages.extend(results.get("messages", []))
-
-            all_message_ids.extend([msg["id"] for msg in messages])
-        except Exception as e:
-            errors.append(f"{sender}: {str(e)}")
+        if sender_data and sender_data.get("message_ids"):
+            all_message_ids.extend(sender_data["message_ids"])
+        else:
+            errors.append(f"{sender}: No scan results found")
 
     if not all_message_ids:
         state.update_delete_bulk_status(
