@@ -357,8 +357,7 @@ def get_gmail_service():
                             host_lower = settings.oauth_host.lower()
                             is_local = (
                                 host_lower in localhost_hosts
-                                or host_lower.endswith(".localhost")
-                                or host_lower.endswith(".local")
+                                or host_lower.endswith((".localhost", ".local"))
                             )
                             scheme = "http" if is_local else "https"
                         redirect_uri = f"{scheme}://{settings.oauth_host}:{redirect_port}/"

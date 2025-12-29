@@ -78,7 +78,7 @@ class TestScanSendersForDelete:
 
     @patch("app.services.gmail.delete.get_gmail_service")
     @patch("app.services.gmail.delete.time.sleep")
-    def test_successful_scan(self, mock_sleep, mock_get_service):
+    def test_successful_scan(self, _mock_sleep, mock_get_service):
         """Successful scan should return grouped senders with correct counts."""
         mock_service = Mock()
         mock_get_service.return_value = (mock_service, None)

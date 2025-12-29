@@ -52,7 +52,14 @@ class Settings(BaseSettings):
                 return True
             if normalized in ("false", "0", "no", "off"):
                 return False
-        return None
+            raise ValueError(
+                f"Invalid value '{v}' for oauth_use_https. "
+                "Expected one of: true, 1, yes, on, false, 0, no, off, or empty to unset."
+            )
+        raise ValueError(
+            f"Invalid type for oauth_use_https: {type(v).__name__}. "
+            "Expected bool, string, or None."
+        )
 
     @field_validator("web_auth", mode="before")
     @classmethod

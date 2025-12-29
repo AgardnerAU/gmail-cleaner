@@ -252,6 +252,19 @@ class TestMarkReadAndArchiveBySenders:
         assert status["error"] == "No senders specified"
         assert status["done"] is True
 
+    @patch("app.services.gmail.unread._process_unread_action")
+    def test_calls_process_with_correct_labels(self, mock_process):
+        """Should call _process_unread_action with remove_labels=['UNREAD', 'INBOX']."""
+        senders = ["sender1@example.com", "sender2@example.com"]
+
+        mark_read_and_archive_by_senders_background(senders)
+
+        mock_process.assert_called_once_with(
+            senders,
+            action_name="mark as read and archive",
+            remove_labels=["UNREAD", "INBOX"],
+        )
+
 
 class TestArchiveUnreadBySenders:
     """Tests for archive_unread_by_senders_background function."""
@@ -263,6 +276,17 @@ class TestArchiveUnreadBySenders:
         status = get_unread_action_status()
         assert status["error"] == "No senders specified"
         assert status["done"] is True
+
+    @patch("app.services.gmail.unread._process_unread_action")
+    def test_calls_process_with_correct_labels(self, mock_process):
+        """Should call _process_unread_action with remove_labels=['INBOX']."""
+        senders = ["sender1@example.com", "sender2@example.com"]
+
+        archive_unread_by_senders_background(senders)
+
+        mock_process.assert_called_once_with(
+            senders, action_name="archive", remove_labels=["INBOX"]
+        )
 
 
 class TestDeleteUnreadBySenders:
@@ -294,6 +318,17 @@ class TestDeleteUnreadBySenders:
         status = get_unread_action_status()
         assert status["error"] == "Authentication required"
         assert status["done"] is True
+
+    @patch("app.services.gmail.unread._process_unread_action")
+    def test_calls_process_with_correct_labels(self, mock_process):
+        """Should call _process_unread_action with add_labels=['TRASH']."""
+        senders = ["sender1@example.com", "sender2@example.com"]
+
+        delete_unread_by_senders_background(senders)
+
+        mock_process.assert_called_once_with(
+            senders, add_labels=["TRASH"], action_name="delete"
+        )
 
 
 class TestStatusFunctions:
