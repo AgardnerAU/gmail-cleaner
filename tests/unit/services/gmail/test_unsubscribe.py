@@ -106,7 +106,6 @@ class TestUnsubscribeSingle:
         mock_validate.return_value = "https://example.com/unsub"
 
         # POST fails, GET succeeds
-        post_response = MagicMock()
         get_response = MagicMock()
         get_response.status = 200
         get_response.__enter__ = Mock(return_value=get_response)

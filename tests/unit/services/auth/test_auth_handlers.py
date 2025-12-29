@@ -6,12 +6,18 @@ Tests for auth_handlers.py - OAuth2 callback processing.
 
 import io
 from threading import Event, Lock, RLock
+from typing import Optional
 from unittest.mock import Mock, patch, MagicMock, PropertyMock
 
 import pytest
 
 
-def create_mock_handler(path: str, callback_event: Event = None, callback_lock: Lock = None, callback_data: dict = None):
+def create_mock_handler(
+    path: str,
+    callback_event: Optional[Event] = None,
+    callback_lock: Optional[Lock] = None,
+    callback_data: Optional[dict] = None,
+):
     """Create a mock OAuthCallbackHandler with the given path."""
     from app.services.auth_handlers import OAuthCallbackHandler
 

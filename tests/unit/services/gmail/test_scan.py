@@ -90,7 +90,6 @@ class TestScanEmails:
 
         # Mock batch request - callback is passed to new_batch_http_request
         batch_callback = None
-        request_count = [0]
 
         def mock_new_batch(callback):
             nonlocal batch_callback
