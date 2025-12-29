@@ -17,6 +17,7 @@ from app.services.gmail.unread import (
     mark_read_by_senders_background,
     mark_read_and_archive_by_senders_background,
     archive_unread_by_senders_background,
+    delete_unread_by_senders_background,
 )
 
 
@@ -261,6 +262,37 @@ class TestArchiveUnreadBySenders:
 
         status = get_unread_action_status()
         assert status["error"] == "No senders specified"
+        assert status["done"] is True
+
+
+class TestDeleteUnreadBySenders:
+    """Tests for delete_unread_by_senders_background function."""
+
+    def test_no_senders_specified(self):
+        """Empty sender list should set error and return early."""
+        delete_unread_by_senders_background([])
+
+        status = get_unread_action_status()
+        assert status["error"] == "No senders specified"
+        assert status["done"] is True
+
+    def test_no_senders_specified_none(self):
+        """None senders should set error and return early."""
+        delete_unread_by_senders_background(None)
+
+        status = get_unread_action_status()
+        assert status["error"] == "No senders specified"
+        assert status["done"] is True
+
+    @patch("app.services.gmail.unread.get_gmail_service")
+    def test_auth_error(self, mock_get_service):
+        """Auth error should set error status."""
+        mock_get_service.return_value = (None, "Authentication required")
+
+        delete_unread_by_senders_background(["sender@example.com"])
+
+        status = get_unread_action_status()
+        assert status["error"] == "Authentication required"
         assert status["done"] is True
 
 

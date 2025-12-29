@@ -76,6 +76,7 @@ from app.services.gmail.unread import (
     mark_read_by_senders_background,
     mark_read_and_archive_by_senders_background,
     archive_unread_by_senders_background,
+    delete_unread_by_senders_background,
 )
 
 # Export private helper functions with underscore-prefixed aliases for backward compatibility.
@@ -133,6 +134,7 @@ __all__ = [
     "unsubscribe_single",
     # Unread
     "archive_unread_by_senders_background",
+    "delete_unread_by_senders_background",
     "get_unread_action_status",
     "get_unread_scan_results",
     "get_unread_scan_status",

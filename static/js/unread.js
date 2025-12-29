@@ -8,6 +8,20 @@ GmailCleaner.Unread = {
     scanning: false,
     results: [],
     inboxOnly: true,
+    displayLimit: 20,
+
+    shouldConfirm() {
+        const skipCheckbox = document.getElementById('unreadSkipConfirm');
+        return !skipCheckbox || !skipCheckbox.checked;
+    },
+
+    changeDisplayLimit() {
+        const select = document.getElementById('unreadDisplayLimit');
+        if (select) {
+            this.displayLimit = parseInt(select.value);
+            this.displayResults();
+        }
+    },
 
     formatDateRange(firstDate, lastDate) {
         const formatDate = (dateStr) => {
@@ -163,7 +177,8 @@ GmailCleaner.Unread = {
         noResults.classList.add('hidden');
         this.setActionButtonsEnabled(true);
 
-        this.results.forEach((r, i) => {
+        const displayCount = Math.min(this.results.length, this.displayLimit);
+        this.results.slice(0, displayCount).forEach((r, i) => {
             const item = document.createElement('div');
             item.className = 'result-item';
 
@@ -193,6 +208,9 @@ GmailCleaner.Unread = {
                     <button class="unsub-btn" style="background: #8b5cf6;" onclick="GmailCleaner.Unread.archiveSender(${i})" title="Archive Only">
                         Archive
                     </button>
+                    <button class="unsub-btn" style="background: #ef4444;" onclick="GmailCleaner.Unread.deleteSender(${i})" title="Delete">
+                        Del
+                    </button>
                 </div>
             `;
             resultsList.appendChild(item);
@@ -203,7 +221,8 @@ GmailCleaner.Unread = {
         const buttons = [
             'unreadMarkReadBtn',
             'unreadMarkReadArchiveBtn',
-            'unreadArchiveBtn'
+            'unreadArchiveBtn',
+            'unreadDeleteBtn'
         ];
         buttons.forEach(id => {
             const btn = document.getElementById(id);
@@ -232,11 +251,15 @@ GmailCleaner.Unread = {
         await this.processSingleSender(index, '/api/unread-archive', 'Archive');
     },
 
+    async deleteSender(index) {
+        await this.processSingleSender(index, '/api/unread-delete', 'Delete');
+    },
+
     async processSingleSender(index, endpoint, actionName) {
         const r = this.results[index];
         const buttons = document.querySelectorAll(`#unreadResultsList .result-item:nth-child(${index + 1}) .result-actions button`);
 
-        if (!confirm(`${actionName} ${r.count} emails from ${r.email}?`)) {
+        if (this.shouldConfirm() && !confirm(`${actionName} ${r.count} emails from ${r.email}?`)) {
             return;
         }
 
@@ -270,7 +293,7 @@ GmailCleaner.Unread = {
             alert('Error: ' + error.message);
             buttons.forEach((btn, i) => {
                 btn.disabled = false;
-                btn.innerHTML = ['Read', 'R+A', 'Archive'][i];
+                btn.innerHTML = ['Read', 'R+A', 'Archive', 'Del'][i];
             });
         }
     },
@@ -285,6 +308,10 @@ GmailCleaner.Unread = {
 
     async archiveSelected() {
         await this.processSelectedSenders('/api/unread-archive', 'archive');
+    },
+
+    async deleteSelected() {
+        await this.processSelectedSenders('/api/unread-delete', 'delete');
     },
 
     async processSelectedSenders(endpoint, actionName) {
@@ -303,7 +330,7 @@ GmailCleaner.Unread = {
             senderEmails.push(r.email);
         });
 
-        if (!confirm(`${actionName.charAt(0).toUpperCase() + actionName.slice(1)} ${totalEmails} emails from ${checkboxes.length} senders?`)) {
+        if (this.shouldConfirm() && !confirm(`${actionName.charAt(0).toUpperCase() + actionName.slice(1)} ${totalEmails} emails from ${checkboxes.length} senders?`)) {
             return;
         }
 
@@ -443,3 +470,4 @@ function toggleUnreadScope() { GmailCleaner.Unread.toggleScope(); }
 function markReadSelected() { GmailCleaner.Unread.markReadSelected(); }
 function markReadAndArchiveSelected() { GmailCleaner.Unread.markReadAndArchiveSelected(); }
 function archiveUnreadSelected() { GmailCleaner.Unread.archiveSelected(); }
+function deleteUnreadSelected() { GmailCleaner.Unread.deleteSelected(); }

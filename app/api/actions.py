@@ -55,6 +55,7 @@ from app.services import (
     mark_read_by_senders_background,
     mark_read_and_archive_by_senders_background,
     archive_unread_by_senders_background,
+    delete_unread_by_senders_background,
 )
 
 router = APIRouter(prefix="/api", tags=["Actions"])
@@ -356,4 +357,19 @@ async def api_unread_archive(
             detail="At least one sender is required",
         )
     background_tasks.add_task(archive_unread_by_senders_background, body.senders)
+    return {"status": "started"}
+
+
+@router.post("/unread-delete")
+@limiter.limit(HEAVY_OPERATION_RATE_LIMIT)
+async def api_unread_delete(
+    request: Request, body: UnreadActionRequest, background_tasks: BackgroundTasks
+):
+    """Delete unread emails (move to trash)."""
+    if not body.senders:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="At least one sender is required",
+        )
+    background_tasks.add_task(delete_unread_by_senders_background, body.senders)
     return {"status": "started"}

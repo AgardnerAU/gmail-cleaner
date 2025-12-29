@@ -345,7 +345,7 @@
                         <svg viewBox="0 0 24 24" width="18" height="18">
                             <path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
                         </svg>
-                        <span><strong>Mark as Read</strong> removes the unread status. <strong>Archive</strong> removes from inbox but keeps in All Mail.</span>
+                        <span><strong>Mark as Read</strong> removes unread status. <strong>Archive</strong> removes from inbox. <strong>Delete</strong> moves to trash.</span>
                     </div>
 
                     <div class="card">
@@ -404,6 +404,12 @@
                                         </svg>
                                         Archive Only
                                     </button>
+                                    <button class="btn btn-action btn-danger" id="unreadDeleteBtn" onclick="deleteUnreadSelected()" disabled>
+                                        <svg viewBox="0 0 24 24" width="16" height="16">
+                                            <path fill="currentColor" d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                                        </svg>
+                                        Delete
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -429,9 +435,24 @@
                                 </label>
                                 <span class="results-count"><span id="unreadSendersBadge">0</span> senders found</span>
                             </div>
+                            <div class="toolbar-right" style="display: flex; align-items: center; gap: 16px;">
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <label for="unreadDisplayLimit" style="font-size: 13px; color: #5f6368;">Show:</label>
+                                    <select id="unreadDisplayLimit" class="form-select" style="width: auto; padding: 4px 8px;" onchange="GmailCleaner.Unread.changeDisplayLimit()">
+                                        <option value="10">10</option>
+                                        <option value="20" selected>20</option>
+                                        <option value="50">50</option>
+                                        <option value="100">100</option>
+                                    </select>
+                                </div>
+                                <label style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: #5f6368; cursor: pointer;">
+                                    <input type="checkbox" id="unreadSkipConfirm" style="cursor: pointer;">
+                                    Skip confirmations
+                                </label>
+                            </div>
                         </div>
 
-                        <div class="results-list" id="unreadResultsList">
+                        <div class="results-list" id="unreadResultsList" style="max-height: 600px; overflow-y: auto;">
                             <!-- Filled by JavaScript -->
                         </div>
                     </div>

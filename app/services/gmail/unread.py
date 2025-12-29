@@ -199,7 +199,7 @@ def mark_read_by_senders_background(senders: list[str]) -> None:
 
     Uses batchModify with removeLabelIds: ["UNREAD"]
     """
-    _process_unread_action(senders, remove_labels=["UNREAD"], action_name="mark as read")
+    _process_unread_action(senders, action_name="mark as read", remove_labels=["UNREAD"])
 
 
 def mark_read_and_archive_by_senders_background(senders: list[str]) -> None:
@@ -208,7 +208,7 @@ def mark_read_and_archive_by_senders_background(senders: list[str]) -> None:
     Uses batchModify with removeLabelIds: ["UNREAD", "INBOX"]
     """
     _process_unread_action(
-        senders, remove_labels=["UNREAD", "INBOX"], action_name="mark as read and archive"
+        senders, action_name="mark as read and archive", remove_labels=["UNREAD", "INBOX"]
     )
 
 
@@ -217,18 +217,30 @@ def archive_unread_by_senders_background(senders: list[str]) -> None:
 
     Uses batchModify with removeLabelIds: ["INBOX"]
     """
-    _process_unread_action(senders, remove_labels=["INBOX"], action_name="archive")
+    _process_unread_action(senders, action_name="archive", remove_labels=["INBOX"])
+
+
+def delete_unread_by_senders_background(senders: list[str]) -> None:
+    """Delete unread emails from specified senders (move to trash).
+
+    Uses batchModify with addLabelIds: ["TRASH"]
+    """
+    _process_unread_action(senders, add_labels=["TRASH"], action_name="delete")
 
 
 def _process_unread_action(
-    senders: list[str], remove_labels: list[str], action_name: str
+    senders: list[str],
+    action_name: str,
+    remove_labels: Optional[list[str]] = None,
+    add_labels: Optional[list[str]] = None,
 ) -> None:
-    """Process bulk unread action (mark read, archive, or both).
+    """Process bulk unread action (mark read, archive, delete, or combinations).
 
     Args:
         senders: List of sender email addresses
-        remove_labels: Labels to remove (e.g., ["UNREAD"], ["INBOX"], ["UNREAD", "INBOX"])
         action_name: Human-readable action name for status messages
+        remove_labels: Labels to remove (e.g., ["UNREAD"], ["INBOX"])
+        add_labels: Labels to add (e.g., ["TRASH"] for delete)
     """
     state.reset_unread_action()
 
@@ -285,9 +297,12 @@ def _process_unread_action(
     try:
         for i in range(0, total_emails, batch_size):
             batch = all_message_ids[i : i + batch_size]
-            service.users().messages().batchModify(
-                userId="me", body={"ids": batch, "removeLabelIds": remove_labels}
-            ).execute()
+            body: dict = {"ids": batch}
+            if remove_labels:
+                body["removeLabelIds"] = remove_labels
+            if add_labels:
+                body["addLabelIds"] = add_labels
+            service.users().messages().batchModify(userId="me", body=body).execute()
             affected += len(batch)
             # Progress: 40-100% for processing
             progress = 40 + int((affected / total_emails) * 60)
