@@ -31,6 +31,9 @@ from app.services import (
     get_label_operation_status,
     get_archive_status,
     get_important_status,
+    get_unread_scan_status,
+    get_unread_scan_results,
+    get_unread_action_status,
 )
 
 router = APIRouter(prefix="/api", tags=["Status"])
@@ -262,4 +265,49 @@ async def api_important_status(request: Request):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to get important status",
+        ) from e
+
+
+# ----- Unread Email Endpoints -----
+
+
+@router.get("/unread-scan-status")
+@limiter.limit(STATUS_RATE_LIMIT)
+async def api_unread_scan_status(request: Request):
+    """Get unread scan status."""
+    try:
+        return get_unread_scan_status()
+    except Exception as e:
+        logger.exception("Error getting unread scan status")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get unread scan status",
+        ) from e
+
+
+@router.get("/unread-scan-results")
+@limiter.limit(STATUS_RATE_LIMIT)
+async def api_unread_scan_results(request: Request):
+    """Get unread scan results (senders grouped by count)."""
+    try:
+        return get_unread_scan_results()
+    except Exception as e:
+        logger.exception("Error getting unread scan results")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get unread scan results",
+        ) from e
+
+
+@router.get("/unread-action-status")
+@limiter.limit(STATUS_RATE_LIMIT)
+async def api_unread_action_status(request: Request):
+    """Get unread action (mark read/archive) status."""
+    try:
+        return get_unread_action_status()
+    except Exception as e:
+        logger.exception("Error getting unread action status")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get unread action status",
         ) from e

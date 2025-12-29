@@ -68,6 +68,15 @@ from app.services.gmail.important import (
     mark_important_background,
     get_important_status,
 )
+from app.services.gmail.unread import (
+    scan_unread_by_sender,
+    get_unread_scan_status,
+    get_unread_scan_results,
+    get_unread_action_status,
+    mark_read_by_senders_background,
+    mark_read_and_archive_by_senders_background,
+    archive_unread_by_senders_background,
+)
 
 # Export private helper functions with underscore-prefixed aliases for backward compatibility.
 # These are used by tests that import the original function names from this module.
@@ -122,4 +131,12 @@ __all__ = [
     "scan_emails",
     # Unsubscribe
     "unsubscribe_single",
+    # Unread
+    "archive_unread_by_senders_background",
+    "get_unread_action_status",
+    "get_unread_scan_results",
+    "get_unread_scan_status",
+    "mark_read_and_archive_by_senders_background",
+    "mark_read_by_senders_background",
+    "scan_unread_by_sender",
 ]

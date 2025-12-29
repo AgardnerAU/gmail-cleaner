@@ -41,6 +41,8 @@ class AppState:
         self._label_lock = threading.Lock()
         self._archive_lock = threading.Lock()
         self._important_lock = threading.Lock()
+        self._unread_scan_lock = threading.Lock()
+        self._unread_action_lock = threading.Lock()
 
         # === User state ===
         self._current_user: dict = {"email": None, "logged_in": False}
@@ -123,6 +125,26 @@ class AppState:
 
         # === Mark important state ===
         self._important_status: dict = {
+            "progress": 0,
+            "message": "Ready",
+            "done": False,
+            "error": None,
+            "affected_count": 0,
+            "total_senders": 0,
+            "current_sender": 0,
+        }
+
+        # === Unread scan state ===
+        self._unread_scan_results: list = []
+        self._unread_scan_status: dict = {
+            "progress": 0,
+            "message": "Ready",
+            "done": False,
+            "error": None,
+        }
+
+        # === Unread action state (mark read/archive) ===
+        self._unread_action_status: dict = {
             "progress": 0,
             "message": "Ready",
             "done": False,
@@ -426,6 +448,68 @@ class AppState:
         """Reset mark important state."""
         with self._important_lock:
             self._important_status = {
+                "progress": 0,
+                "message": "Ready",
+                "done": False,
+                "error": None,
+                "affected_count": 0,
+                "total_senders": 0,
+                "current_sender": 0,
+            }
+
+    # =========================================================================
+    # UNREAD SCAN STATE
+    # =========================================================================
+
+    def get_unread_scan_status(self) -> dict:
+        """Get a copy of the unread scan status."""
+        with self._unread_scan_lock:
+            return self._unread_scan_status.copy()
+
+    def update_unread_scan_status(self, **kwargs: Any) -> None:
+        """Update unread scan status with the provided key-value pairs."""
+        with self._unread_scan_lock:
+            self._unread_scan_status.update(kwargs)
+
+    def get_unread_scan_results(self) -> list:
+        """Get a deep copy of the unread scan results."""
+        with self._unread_scan_lock:
+            return deepcopy(self._unread_scan_results)
+
+    def set_unread_scan_results(self, results: list) -> None:
+        """Replace the unread scan results entirely."""
+        with self._unread_scan_lock:
+            self._unread_scan_results = deepcopy(results)
+
+    def reset_unread_scan(self) -> None:
+        """Reset unread scan state."""
+        with self._unread_scan_lock:
+            self._unread_scan_results = []
+            self._unread_scan_status = {
+                "progress": 0,
+                "message": "Ready",
+                "done": False,
+                "error": None,
+            }
+
+    # =========================================================================
+    # UNREAD ACTION STATE
+    # =========================================================================
+
+    def get_unread_action_status(self) -> dict:
+        """Get a copy of the unread action status."""
+        with self._unread_action_lock:
+            return self._unread_action_status.copy()
+
+    def update_unread_action_status(self, **kwargs: Any) -> None:
+        """Update unread action status with the provided key-value pairs."""
+        with self._unread_action_lock:
+            self._unread_action_status.update(kwargs)
+
+    def reset_unread_action(self) -> None:
+        """Reset unread action state."""
+        with self._unread_action_lock:
+            self._unread_action_status = {
                 "progress": 0,
                 "message": "Ready",
                 "done": False,

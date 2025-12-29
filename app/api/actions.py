@@ -32,6 +32,8 @@ from app.models import (
     RemoveLabelRequest,
     ArchiveRequest,
     MarkImportantRequest,
+    UnreadScanRequest,
+    UnreadActionRequest,
 )
 from app.services import (
     scan_emails,
@@ -49,6 +51,10 @@ from app.services import (
     remove_label_from_senders_background,
     archive_emails_background,
     mark_important_background,
+    scan_unread_by_sender,
+    mark_read_by_senders_background,
+    mark_read_and_archive_by_senders_background,
+    archive_unread_by_senders_background,
 )
 
 router = APIRouter(prefix="/api", tags=["Actions"])
@@ -287,4 +293,67 @@ async def api_mark_important(
     background_tasks.add_task(
         partial(mark_important_background, body.senders, important=body.important)
     )
+    return {"status": "started"}
+
+
+# ----- Unread Email Endpoints -----
+
+
+@router.post("/unread-scan")
+@limiter.limit(HEAVY_OPERATION_RATE_LIMIT)
+async def api_unread_scan(
+    request: Request, body: UnreadScanRequest, background_tasks: BackgroundTasks
+):
+    """Scan unread emails grouped by sender."""
+    filters_dict = (
+        body.filters.model_dump(exclude_none=True) if body.filters else None
+    )
+    background_tasks.add_task(
+        scan_unread_by_sender, body.limit, filters_dict, body.inbox_only
+    )
+    return {"status": "started"}
+
+
+@router.post("/unread-mark-read")
+@limiter.limit(HEAVY_OPERATION_RATE_LIMIT)
+async def api_unread_mark_read(
+    request: Request, body: UnreadActionRequest, background_tasks: BackgroundTasks
+):
+    """Mark unread emails from selected senders as read."""
+    if not body.senders:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="At least one sender is required",
+        )
+    background_tasks.add_task(mark_read_by_senders_background, body.senders)
+    return {"status": "started"}
+
+
+@router.post("/unread-mark-read-archive")
+@limiter.limit(HEAVY_OPERATION_RATE_LIMIT)
+async def api_unread_mark_read_archive(
+    request: Request, body: UnreadActionRequest, background_tasks: BackgroundTasks
+):
+    """Mark as read and archive unread emails from selected senders."""
+    if not body.senders:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="At least one sender is required",
+        )
+    background_tasks.add_task(mark_read_and_archive_by_senders_background, body.senders)
+    return {"status": "started"}
+
+
+@router.post("/unread-archive")
+@limiter.limit(HEAVY_OPERATION_RATE_LIMIT)
+async def api_unread_archive(
+    request: Request, body: UnreadActionRequest, background_tasks: BackgroundTasks
+):
+    """Archive unread emails (keep unread status)."""
+    if not body.senders:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="At least one sender is required",
+        )
+    background_tasks.add_task(archive_unread_by_senders_background, body.senders)
     return {"status": "started"}
