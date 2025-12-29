@@ -487,7 +487,7 @@ def get_gmail_service():
                                     exc_info=True,
                                 )
                                 raise ValueError(
-                                    f"Failed to exchange authorization code: {str(e)}. "
+                                    f"Failed to exchange authorization code: {e!s}. "
                                     "Please try signing in again."
                                 ) from e
 
@@ -608,7 +608,7 @@ def get_gmail_service():
         # Return error instead of crashing
         return (
             None,
-            f"Failed to connect to Gmail API: {str(e)}. Please try signing in again.",
+            f"Failed to connect to Gmail API: {e!s}. Please try signing in again.",
         )
 
     try:

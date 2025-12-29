@@ -378,7 +378,7 @@ def delete_emails_bulk_background(senders: list[str]) -> None:
                 message=f"Deleted {deleted}/{total_emails} emails...",
             )
     except Exception as e:
-        errors.append(f"Batch delete error: {str(e)}")
+        errors.append(f"Batch delete error: {e!s}")
 
     # Remove deleted senders from cached scan results
     current_results = state.get_delete_scan_results()

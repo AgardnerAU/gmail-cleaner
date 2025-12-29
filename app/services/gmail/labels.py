@@ -173,7 +173,7 @@ def _apply_label_operation_background(
                 return
         except Exception as e:
             state.update_label_operation_status(
-                done=True, error=f"Failed to fetch label: {str(e)}"
+                done=True, error=f"Failed to fetch label: {e!s}"
             )
             return
 
@@ -216,7 +216,7 @@ def _apply_label_operation_background(
 
             all_message_ids.extend([msg["id"] for msg in messages])
         except Exception as e:
-            errors.append(f"{sender}: {str(e)}")
+            errors.append(f"{sender}: {e!s}")
 
     if not all_message_ids:
         state.update_label_operation_status(
@@ -252,7 +252,7 @@ def _apply_label_operation_background(
                 message=progress_message_template.format(count=affected, total=total_emails),
             )
     except Exception as e:
-        errors.append(f"Batch operation error: {str(e)}")
+        errors.append(f"Batch operation error: {e!s}")
 
     # Done
     if errors:

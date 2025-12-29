@@ -145,7 +145,7 @@ def download_emails_background(senders: list[str]) -> None:
                 time.sleep(0.3)
 
     except Exception as e:
-        state.update_download_status(done=True, error=f"Error fetching emails: {str(e)}")
+        state.update_download_status(done=True, error=f"Error fetching emails: {e!s}")
         return
 
     # Generate CSV
@@ -177,7 +177,7 @@ def download_emails_background(senders: list[str]) -> None:
         )
 
     except Exception as e:
-        state.update_download_status(done=True, error=f"Error generating CSV: {str(e)}")
+        state.update_download_status(done=True, error=f"Error generating CSV: {e!s}")
 
 
 def get_download_status() -> dict:
