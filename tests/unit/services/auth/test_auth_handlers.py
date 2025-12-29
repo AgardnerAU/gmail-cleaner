@@ -5,7 +5,7 @@ Tests for auth_handlers.py - OAuth2 callback processing.
 """
 
 import io
-from threading import Event, Lock, RLock
+from threading import Event, Lock
 from typing import Optional
 from unittest.mock import Mock, patch, MagicMock, PropertyMock
 
@@ -143,9 +143,6 @@ class TestOAuthCallbackHandler:
         callback_event = Event()
 
         mock_state.get_oauth_state.return_value = {"state": "matching_state"}
-        # Mock the oauth_state_lock as a reentrant lock
-        mock_state.oauth_state_lock = RLock()
-        mock_state.oauth_state = {"state": "matching_state"}
 
         handler = create_mock_handler(
             "/?code=authorization_code_123&state=matching_state",
@@ -189,8 +186,6 @@ class TestOAuthCallbackHandler:
         callback_event = Event()
 
         mock_state.get_oauth_state.return_value = {"state": "matching_state"}
-        mock_state.oauth_state_lock = RLock()
-        mock_state.oauth_state = {"state": "matching_state"}
 
         handler = create_mock_handler(
             "/?error=access_denied&state=matching_state",
@@ -211,8 +206,6 @@ class TestOAuthCallbackHandler:
         callback_event = Event()
 
         mock_state.get_oauth_state.return_value = {"state": "matching_state"}
-        mock_state.oauth_state_lock = RLock()
-        mock_state.oauth_state = {"state": "matching_state"}
 
         handler = create_mock_handler(
             "/?error=access_denied&error_description=User%20denied%20access&state=matching_state",
