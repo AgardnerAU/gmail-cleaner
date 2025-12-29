@@ -318,10 +318,8 @@ def _process_unread_action(
         logger.exception(f"Error during {action_name}")
         errors.append(f"Batch modify error: {e!s}")
 
-    # Remove processed senders from cached scan results
-    current_results = state.get_unread_scan_results()
-    filtered_results = [r for r in current_results if r.get("email") not in senders]
-    state.set_unread_scan_results(filtered_results)
+    # Atomically remove processed senders from cached scan results
+    state.remove_senders_from_unread_results(set(senders))
 
     # Done
     if errors:

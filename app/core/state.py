@@ -481,6 +481,20 @@ class AppState:
         with self._unread_scan_lock:
             self._unread_scan_results = deepcopy(results)
 
+    def remove_senders_from_unread_results(self, senders: set[str]) -> None:
+        """Atomically remove senders from unread scan results.
+
+        This performs a read-filter-write operation under a single lock
+        to prevent race conditions with concurrent scans/actions.
+
+        Args:
+            senders: Set of sender email addresses to remove
+        """
+        with self._unread_scan_lock:
+            self._unread_scan_results = [
+                r for r in self._unread_scan_results if r.get("email") not in senders
+            ]
+
     def reset_unread_scan(self) -> None:
         """Reset unread scan state."""
         with self._unread_scan_lock:

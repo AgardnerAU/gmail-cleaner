@@ -335,3 +335,35 @@ class TestStatusFunctions:
         assert "affected_count" in status
         assert "total_senders" in status
         assert "current_sender" in status
+
+    def test_remove_senders_from_unread_results_atomic(self):
+        """remove_senders_from_unread_results should atomically filter results."""
+        # Set up initial results
+        initial_results = [
+            {"email": "a@example.com", "count": 5},
+            {"email": "b@example.com", "count": 3},
+            {"email": "c@example.com", "count": 7},
+        ]
+        state.set_unread_scan_results(initial_results)
+
+        # Remove some senders atomically
+        state.remove_senders_from_unread_results({"a@example.com", "c@example.com"})
+
+        # Verify only b@example.com remains
+        results = state.get_unread_scan_results()
+        assert len(results) == 1
+        assert results[0]["email"] == "b@example.com"
+        assert results[0]["count"] == 3
+
+    def test_remove_senders_from_unread_results_empty_set(self):
+        """remove_senders_from_unread_results with empty set should keep all."""
+        initial_results = [
+            {"email": "a@example.com", "count": 5},
+            {"email": "b@example.com", "count": 3},
+        ]
+        state.set_unread_scan_results(initial_results)
+
+        state.remove_senders_from_unread_results(set())
+
+        results = state.get_unread_scan_results()
+        assert len(results) == 2
