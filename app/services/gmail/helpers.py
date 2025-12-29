@@ -166,7 +166,7 @@ def build_gmail_query(filters: Optional[Union[dict, Any]] = None) -> str:
         query_parts.append(f"from:{sanitize_gmail_query_value(sender)}")
 
     if label := filters.get("label", ""):
-        query_parts.append(f"label:{label}")
+        query_parts.append(f"label:{sanitize_gmail_query_value(label)}")
 
     return " ".join(query_parts)
 

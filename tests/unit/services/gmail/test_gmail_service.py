@@ -140,6 +140,25 @@ class TestBuildGmailQuery:
         query = build_gmail_query(filters)
         assert query == 'from:"user\\"test@example.com"'
 
+    def test_label_filter_is_sanitized(self):
+        """Label filter should be quoted for safety."""
+        filters = {"label": "my-label"}
+        query = build_gmail_query(filters)
+        assert query == 'label:"my-label"'
+
+    def test_label_filter_prevents_injection(self):
+        """Label filter should prevent query injection."""
+        malicious_label = "spam OR from:admin@company.com"
+        filters = {"label": malicious_label}
+        query = build_gmail_query(filters)
+        assert query == 'label:"spam OR from:admin@company.com"'
+
+    def test_label_filter_with_quotes_escaped(self):
+        """Label filter with quotes should have them escaped."""
+        filters = {"label": 'my"label'}
+        query = build_gmail_query(filters)
+        assert query == 'label:"my\\"label"'
+
 
 class TestGetUnsubscribeFromHeaders:
     """Tests for _get_unsubscribe_from_headers function."""
