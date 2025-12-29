@@ -132,8 +132,7 @@ class OAuthCallbackHandler(BaseHTTPRequestHandler):
                 with self.callback_lock:
                     self.callback_data["code"] = code_list[0]
                     # Clear OAuth state after successful verification
-                    with state.oauth_state_lock:
-                        state.oauth_state["state"] = None
+                    state.set_oauth_state(None)
                     self.callback_event.set()
                 self.send_response(200)
                 self.send_header("Content-type", "text/html")
@@ -146,8 +145,7 @@ class OAuthCallbackHandler(BaseHTTPRequestHandler):
                 with self.callback_lock:
                     self.callback_data["error"] = "Empty authorization code"
                     self.callback_data["code"] = None
-                    with state.oauth_state_lock:
-                        state.oauth_state["state"] = None
+                    state.set_oauth_state(None)
                     self.callback_event.set()
                 logger.warning("OAuth callback received empty code parameter")
                 self.send_response(400)
@@ -167,8 +165,7 @@ class OAuthCallbackHandler(BaseHTTPRequestHandler):
                         f" - {error_description}" if error_description else ""
                     )
                     # Clear OAuth state on error
-                    with state.oauth_state_lock:
-                        state.oauth_state["state"] = None
+                    state.set_oauth_state(None)
                     self.callback_event.set()
                 logger.error(
                     f"OAuth callback error: {error_message}"
@@ -185,8 +182,7 @@ class OAuthCallbackHandler(BaseHTTPRequestHandler):
                 with self.callback_lock:
                     self.callback_data["error"] = "Empty error parameter received"
                     self.callback_data["code"] = None
-                    with state.oauth_state_lock:
-                        state.oauth_state["state"] = None
+                    state.set_oauth_state(None)
                     self.callback_event.set()
                 logger.warning("OAuth callback received empty error parameter")
                 self.send_response(400)

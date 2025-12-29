@@ -271,8 +271,6 @@ class TestOAuthCallbackHandler:
         callback_event = Event()
 
         mock_state.get_oauth_state.return_value = {"state": "matching_state"}
-        mock_state.oauth_state_lock = RLock()
-        mock_state.oauth_state = {"state": "matching_state"}
 
         handler = create_mock_handler(
             "/?code=auth_code&state=matching_state",
@@ -282,8 +280,8 @@ class TestOAuthCallbackHandler:
 
         handler.do_GET()
 
-        # State should be cleared (set to None)
-        assert mock_state.oauth_state["state"] is None
+        # set_oauth_state should be called with None on success
+        mock_state.set_oauth_state.assert_called_with(None)
 
     @patch("app.services.auth_handlers.state")
     def test_state_cleared_on_error(self, mock_state):
