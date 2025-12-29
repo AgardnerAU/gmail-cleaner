@@ -9,6 +9,7 @@ GmailCleaner.Unread = {
     results: [],
     inboxOnly: true,
     displayLimit: 20,
+    MAX_POLL_RETRIES: 10,
 
     shouldConfirm() {
         const skipCheckbox = document.getElementById('unreadSkipConfirm');
@@ -117,7 +118,7 @@ GmailCleaner.Unread = {
         }
     },
 
-    async pollProgress() {
+    async pollProgress(retryCount = 0) {
         try {
             const response = await fetch('/api/unread-scan-status');
             const status = await response.json();
@@ -138,10 +139,15 @@ GmailCleaner.Unread = {
                 }
                 this.resetScan();
             } else {
-                setTimeout(() => this.pollProgress(), 300);
+                setTimeout(() => this.pollProgress(0), 300);
             }
         } catch (error) {
-            setTimeout(() => this.pollProgress(), 500);
+            if (retryCount >= this.MAX_POLL_RETRIES) {
+                alert('Error: Network error while polling scan status. Please try again.');
+                this.resetScan();
+                return;
+            }
+            setTimeout(() => this.pollProgress(retryCount + 1), 500);
         }
     },
 
@@ -356,12 +362,15 @@ GmailCleaner.Unread = {
     },
 
     async pollActionProgress(actionName, senders) {
+        const maxRetries = this.MAX_POLL_RETRIES;
         return new Promise((resolve, reject) => {
+            let retryCount = 0;
             const poll = async () => {
                 try {
                     const response = await fetch('/api/unread-action-status');
                     const status = await response.json();
 
+                    retryCount = 0; // Reset on successful response
                     if (status.done) {
                         if (status.error) {
                             reject(new Error(status.error));
@@ -372,6 +381,11 @@ GmailCleaner.Unread = {
                         setTimeout(poll, 300);
                     }
                 } catch (error) {
+                    retryCount++;
+                    if (retryCount >= maxRetries) {
+                        reject(new Error(`Network error while polling action status after ${maxRetries} retries`));
+                        return;
+                    }
                     setTimeout(poll, 500);
                 }
             };
@@ -379,7 +393,7 @@ GmailCleaner.Unread = {
         });
     },
 
-    async pollActionProgressWithOverlay(actionName, checkboxes) {
+    async pollActionProgressWithOverlay(actionName, checkboxes, retryCount = 0) {
         try {
             const response = await fetch('/api/unread-action-status');
             const status = await response.json();
@@ -403,10 +417,15 @@ GmailCleaner.Unread = {
                     alert('Error: ' + status.error);
                 }
             } else {
-                setTimeout(() => this.pollActionProgressWithOverlay(actionName, checkboxes), 300);
+                setTimeout(() => this.pollActionProgressWithOverlay(actionName, checkboxes, 0), 300);
             }
         } catch (error) {
-            setTimeout(() => this.pollActionProgressWithOverlay(actionName, checkboxes), 500);
+            if (retryCount >= this.MAX_POLL_RETRIES) {
+                this.hideActionOverlay();
+                alert(`Error: Network error while polling action status after ${this.MAX_POLL_RETRIES} retries`);
+                return;
+            }
+            setTimeout(() => this.pollActionProgressWithOverlay(actionName, checkboxes, retryCount + 1), 500);
         }
     },
 
