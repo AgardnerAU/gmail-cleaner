@@ -7,6 +7,8 @@ Functions for scanning and managing unread emails by sender.
 import logging
 import time
 from collections import defaultdict
+from datetime import datetime
+from email.utils import parsedate_to_datetime
 from typing import Optional
 
 from app.core import state
@@ -16,6 +18,23 @@ from app.services.gmail.helpers import (
     get_sender_info,
     get_subject,
 )
+
+
+def _parse_email_date(date_str: str | None) -> datetime | None:
+    """Parse email date string to datetime, handling various formats.
+
+    Args:
+        date_str: RFC 2822 formatted date string from email header
+
+    Returns:
+        datetime object or None if parsing fails
+    """
+    if not date_str:
+        return None
+    try:
+        return parsedate_to_datetime(date_str)
+    except (ValueError, TypeError):
+        return None
 
 logger = logging.getLogger(__name__)
 
@@ -113,10 +132,10 @@ def scan_unread_by_sender(
             size_estimate = response.get("sizeEstimate", 0)
 
             # Extract date from headers
-            email_date = None
+            email_date_str = None
             for header in headers:
                 if header["name"].lower() == "date":
-                    email_date = header["value"]
+                    email_date_str = header["value"]
                     break
 
             if sender_email:
@@ -128,11 +147,19 @@ def scan_unread_by_sender(
                 if len(sender_counts[sender_email]["subjects"]) < 3:
                     sender_counts[sender_email]["subjects"].append(subject)
 
-                # Track first and last dates
-                if email_date:
-                    if sender_counts[sender_email]["first_date"] is None:
-                        sender_counts[sender_email]["first_date"] = email_date
-                    sender_counts[sender_email]["last_date"] = email_date
+                # Track first (oldest) and last (newest) dates using proper comparison
+                if email_date_str:
+                    parsed_date = _parse_email_date(email_date_str)
+                    if parsed_date:
+                        sender_data = sender_counts[sender_email]
+                        # Update first_date if this is older
+                        existing_first = _parse_email_date(sender_data["first_date"])
+                        if existing_first is None or parsed_date < existing_first:
+                            sender_data["first_date"] = email_date_str
+                        # Update last_date if this is newer
+                        existing_last = _parse_email_date(sender_data["last_date"])
+                        if existing_last is None or parsed_date > existing_last:
+                            sender_data["last_date"] = email_date_str
 
         # Execute batch requests
         for i in range(0, len(messages), batch_size):

@@ -79,7 +79,7 @@ class TestScanSendersForDelete:
     @patch("app.services.gmail.delete.get_gmail_service")
     @patch("app.services.gmail.delete.time.sleep")
     def test_successful_scan(self, mock_sleep, mock_get_service):
-        """Successful scan should return grouped senders."""
+        """Successful scan should return grouped senders with correct counts."""
         mock_service = Mock()
         mock_get_service.return_value = (mock_service, None)
 
@@ -90,35 +90,75 @@ class TestScanSendersForDelete:
         }
         mock_service.users.return_value.messages.return_value.list.return_value = mock_list
 
-        # Mock batch request
-        def batch_execute_side_effect():
-            # Simulate callback being called for each message
-            pass
-
-        mock_batch = Mock()
-        mock_batch.execute = batch_execute_side_effect
-        mock_service.new_batch_http_request.return_value = mock_batch
-
-        # Mock individual message get
-        mock_get = Mock()
-        mock_get.execute.return_value = {
-            "id": "msg1",
-            "payload": {
-                "headers": [
-                    {"name": "From", "value": "sender@example.com"},
-                    {"name": "Subject", "value": "Test Subject"},
-                    {"name": "Date", "value": "2024-01-01"},
-                ]
+        # Prepare mock message responses - 2 from sender1, 1 from sender2
+        mock_messages = [
+            {
+                "id": "msg1",
+                "payload": {
+                    "headers": [
+                        {"name": "From", "value": "sender1@example.com"},
+                        {"name": "Subject", "value": "Subject 1"},
+                        {"name": "Date", "value": "Mon, 01 Jan 2024 10:00:00 +0000"},
+                    ]
+                },
+                "sizeEstimate": 1000,
             },
-            "sizeEstimate": 1000,
-        }
-        mock_service.users.return_value.messages.return_value.get.return_value = mock_get
+            {
+                "id": "msg2",
+                "payload": {
+                    "headers": [
+                        {"name": "From", "value": "sender1@example.com"},
+                        {"name": "Subject", "value": "Subject 2"},
+                        {"name": "Date", "value": "Tue, 02 Jan 2024 10:00:00 +0000"},
+                    ]
+                },
+                "sizeEstimate": 2000,
+            },
+            {
+                "id": "msg3",
+                "payload": {
+                    "headers": [
+                        {"name": "From", "value": "sender2@example.com"},
+                        {"name": "Subject", "value": "Subject 3"},
+                        {"name": "Date", "value": "Wed, 03 Jan 2024 10:00:00 +0000"},
+                    ]
+                },
+                "sizeEstimate": 500,
+            },
+        ]
+
+        # Mock batch request to invoke callback with each message
+        def mock_new_batch(callback):
+            batch = Mock()
+            batch.add = Mock()
+
+            def execute_batch():
+                for i, msg in enumerate(mock_messages):
+                    callback(str(i), msg, None)
+
+            batch.execute = execute_batch
+            return batch
+
+        mock_service.new_batch_http_request = mock_new_batch
 
         scan_senders_for_delete(limit=10)
 
         status = get_delete_scan_status()
-        # Status should be done
         assert status["done"] is True
+        assert status["error"] is None
+
+        # Verify scan results
+        results = get_delete_scan_results()
+        assert len(results) == 2  # 2 unique senders
+
+        # Results should be sorted by count (descending)
+        assert results[0]["email"] == "sender1@example.com"
+        assert results[0]["count"] == 2
+        assert results[0]["total_size"] == 3000  # 1000 + 2000
+
+        assert results[1]["email"] == "sender2@example.com"
+        assert results[1]["count"] == 1
+        assert results[1]["total_size"] == 500
 
     @patch("app.services.gmail.delete.get_gmail_service")
     def test_exception_handling(self, mock_get_service):

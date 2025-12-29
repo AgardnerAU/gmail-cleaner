@@ -341,9 +341,26 @@ def get_gmail_service():
                             )
 
                         # Construct redirect URI using external port
-                        # Use HTTPS for non-localhost hosts to protect auth code in transit
-                        is_localhost = settings.oauth_host in ("localhost", "127.0.0.1", "::1")
-                        scheme = "http" if is_localhost else "https"
+                        # Determine scheme: explicit override > hostname heuristic
+                        if settings.oauth_use_https is not None:
+                            # Explicit override takes precedence
+                            scheme = "https" if settings.oauth_use_https else "http"
+                        else:
+                            # Hostname heuristic: HTTP for localhost and Docker internal hosts
+                            localhost_hosts = {
+                                "localhost",
+                                "127.0.0.1",
+                                "::1",
+                                "host.docker.internal",
+                                "gateway.docker.internal",
+                            }
+                            host_lower = settings.oauth_host.lower()
+                            is_local = (
+                                host_lower in localhost_hosts
+                                or host_lower.endswith(".localhost")
+                                or host_lower.endswith(".local")
+                            )
+                            scheme = "http" if is_local else "https"
                         redirect_uri = f"{scheme}://{settings.oauth_host}:{redirect_port}/"
                         flow.redirect_uri = redirect_uri
                         logger.info(

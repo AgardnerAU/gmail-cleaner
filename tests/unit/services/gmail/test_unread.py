@@ -367,3 +367,36 @@ class TestStatusFunctions:
 
         results = state.get_unread_scan_results()
         assert len(results) == 2
+
+
+class TestParseDateHelper:
+    """Tests for _parse_email_date helper function."""
+
+    def test_parse_valid_rfc2822_date(self):
+        """Valid RFC 2822 date should be parsed correctly."""
+        from app.services.gmail.unread import _parse_email_date
+
+        result = _parse_email_date("Mon, 01 Jan 2024 10:00:00 +0000")
+        assert result is not None
+        assert result.year == 2024
+        assert result.month == 1
+        assert result.day == 1
+
+    def test_parse_none_returns_none(self):
+        """None input should return None."""
+        from app.services.gmail.unread import _parse_email_date
+
+        assert _parse_email_date(None) is None
+
+    def test_parse_empty_string_returns_none(self):
+        """Empty string should return None."""
+        from app.services.gmail.unread import _parse_email_date
+
+        assert _parse_email_date("") is None
+
+    def test_parse_invalid_date_returns_none(self):
+        """Invalid date string should return None without raising."""
+        from app.services.gmail.unread import _parse_email_date
+
+        assert _parse_email_date("not a date") is None
+        assert _parse_email_date("2024-01-01") is None  # ISO format not supported
